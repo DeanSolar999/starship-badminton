@@ -3,132 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>曜日羽球團 - 星際後勤指揮部 v2.2</title>
+    <title>曜日羽球團 - 星際補給母艦 v2.9</title>
     <style>
+        /* --- 基礎設定 --- */
         :root {
-            /* 深色基底 */
-            --bg-main: #0f172a;
-            --bg-card: #1e293b;
-            --bg-input: #334155;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --accent: #38bdf8;
-            --border: #475569;
-
-            /* 七曜日光譜 */
-            --d-1: #a855f7; /* Mon: 紫 */
-            --d-2: #ef4444; /* Tue: 紅 */
-            --d-3: #3b82f6; /* Wed: 藍 */
-            --d-4: #22c55e; /* Thu: 綠 */
-            --d-5: #f59e0b; /* Fri: 金 */
-            --d-6: #f97316; /* Sat: 橙 */
-            --d-0: #eab308; /* Sun: 黃 */
-            --d-temp: #94a3b8; /* Temp: 灰 */
-
-            /* 霓虹紅 (Danger Red) */
-            --neon-red: #ff1744;
-            --neon-red-glow: rgba(255, 23, 68, 0.35);
-            --neon-red-bg: rgba(255, 23, 68, 0.1);
-
-            /* 狀態燈 */
-            --st-green-bg: rgba(16, 185, 129, 0.2); --st-green-text: #34d399;
-            --st-yellow-bg: rgba(245, 158, 11, 0.2); --st-yellow-text: #fbbf24;
-            --st-red-bg: rgba(239, 68, 68, 0.2);    --st-red-text: #f87171;
+            --bg-main: #0f172a; --bg-card: #1e293b; --bg-input: #334155;
+            --text-primary: #f1f5f9; --text-secondary: #94a3b8;
+            --accent: #38bdf8; --border: #475569;
+            /* 七曜日 */
+            --d-1: #a855f7; --d-2: #ef4444; --d-3: #3b82f6; --d-4: #22c55e;
+            --d-5: #f59e0b; --d-6: #f97316; --d-0: #eab308; --d-temp: #94a3b8;
+            /* 狀態色 */
+            --neon-red: #ff1744; --neon-red-glow: rgba(255, 23, 68, 0.35); --neon-red-bg: rgba(255, 23, 68, 0.1);
+            --st-green-bg: rgba(16, 185, 129, 0.15); --st-green-text: #34d399; 
+            --st-yellow-bg: rgba(245, 158, 11, 0.15); --st-yellow-text: #fbbf24;
+            --st-red-bg: rgba(239, 68, 68, 0.15);    --st-red-text: #f87171;
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-main); color: var(--text-primary);
-            margin: 0; padding: 15px; padding-bottom: 90px;
+            margin: 0; padding: 15px; padding-bottom: 120px;
         }
 
-        /* --- 儀表板佈局系統 (Dashboard Layout) --- */
-        .dashboard-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 1200px; /* 最大寬度限制，避免在超寬螢幕太散 */
-            margin: 0 auto;
-        }
-
-        /* PC 版規則：當螢幕大於 768px 時 */
+        /* --- 儀表板佈局 --- */
+        .dashboard-container { display: flex; flex-direction: column; gap: 20px; max-width: 1200px; margin: 0 auto; }
         @media (min-width: 768px) {
             .dashboard-container {
-                display: grid;
-                grid-template-columns: 1fr 1fr; /* 兩欄並排 */
-                grid-template-areas: 
-                    "venue ball"
-                    "history history"; /* 歷史紀錄佔滿下方 */
+                display: grid; grid-template-columns: 1fr 1fr;
+                grid-template-areas: "venue ball" "history history";
                 align-items: start;
             }
-            /* 指定各區塊的位置 */
-            .area-venue { grid-area: venue; }
-            .area-ball { grid-area: ball; }
-            .area-history { grid-area: history; }
-
-            /* 讓歷史紀錄表格在 PC 上更好看 */
-            .venue-group table { font-size: 0.95rem; }
-            .venue-group th, .venue-group td { padding: 15px 10px; }
-            
-            /* 調整 HUD 在 PC 上的樣式 */
-            .summary-bar {
-                padding: 15px 40px !important;
-                background: rgba(15, 23, 42, 0.9);
-                backdrop-filter: blur(10px);
-            }
+            .area-venue { grid-area: venue; } .area-ball { grid-area: ball; } .area-history { grid-area: history; }
+            .summary-bar { padding: 15px 40px !important; left: 50% !important; transform: translateX(-50%); max-width: 480px; border-left:1px solid var(--border); border-right:1px solid var(--border); }
             .hud-item { flex-direction: row; gap: 10px; align-items: baseline; }
-            .label { font-size: 0.8rem; margin-bottom: 0; }
-            .val { font-size: 1.2rem; }
+            .label { font-size: 0.8rem; margin-bottom: 0; } .val { font-size: 1.2rem; }
+            body { max-width: 480px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); min-height: 100vh; box-shadow: 0 0 50px rgba(0,0,0,0.5); background-color: #0b1120; }
+            #loader { max-width: 480px; left: 50% !important; transform: translateX(-50%); }
         }
-        /* ------------------------------------- */
 
+        /* --- 通用元件 --- */
         h1 { text-align: center; margin-bottom: 25px; font-size: 1.6rem; font-weight: 800; letter-spacing: 2px; color: var(--text-primary); }
         h1 span { color: var(--accent); text-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+        .card { background: var(--bg-card); border-radius: 16px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); height: 100%; }
+        h2 { font-size: 1.1rem; margin: 0 0 15px 0; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        
+        input { transition: 0.2s; } input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2); outline: none; }
+        input[type="date"] { width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: white; font-size: 1rem; color-scheme: dark; font-weight: bold; cursor: pointer; }
 
-        .card { 
-            background: var(--bg-card); border-radius: 16px; padding: 20px; 
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            height: 100%; /* 讓並排的卡片等高 */
-        }
-
-        h2 { 
-            font-size: 1.1rem; margin: 0 0 15px 0; color: var(--text-secondary); 
-            font-weight: 600; display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid var(--border); padding-bottom: 10px;
-        }
-
-        /* Input 優化 */
-        input[type="date"], input[type="text"], input[type="number"] {
-            transition: 0.2s;
-        }
-        input[type="date"]:focus, input[type="text"]:focus, input[type="number"]:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
-            outline: none;
-        }
-
-        /* 日期顯示 */
-        input[type="date"] {
-            width: 100%; padding: 12px; background: var(--bg-input); 
-            border: 1px solid var(--border); border-radius: 10px; 
-            color: white; font-size: 1rem; color-scheme: dark; font-weight: bold; cursor: pointer;
-        }
-
-        /* 場地按鈕 */
-        .venue-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .venue-btn { 
-            background: var(--bg-main); border: 1px solid var(--border);
-            padding: 15px 5px; border-radius: 12px; cursor: pointer; text-align: center; color: var(--text-secondary);
-            transition: 0.2s; position: relative; overflow: hidden;
-            border-left-width: 5px; 
-        }
+        .venue-grid, .ball-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .venue-btn, .ball-btn { background: var(--bg-main); border: 1px solid var(--border); padding: 15px 5px; border-radius: 12px; cursor: pointer; text-align: center; color: var(--text-secondary); transition: 0.2s; position: relative; overflow: hidden; }
+        .venue-btn { border-left-width: 5px; }
         .venue-btn strong { display: block; font-size: 1rem; margin-bottom: 4px; color: var(--text-primary); }
         .venue-btn span { font-size: 0.75rem; opacity: 0.7; }
-        .venue-btn.active { background: var(--bg-input); box-shadow: inset 0 0 15px rgba(0,0,0,0.5); border-color: var(--accent); border-left-width: 5px; }
+        .venue-btn.active { background: var(--bg-input); box-shadow: inset 0 0 15px rgba(0,0,0,0.5); border-color: var(--accent); }
         .venue-btn.active strong { color: var(--accent); }
-        .venue-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .ball-btn.active { background: var(--bg-input); color: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px rgba(56, 189, 248, 0.15); }
+        .venue-btn:hover, .ball-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); border-color: var(--text-secondary); }
+        .ball-del-btn { position: absolute; top: -5px; right: -5px; width: 22px; height: 22px; background: var(--neon-red); color: white; border-radius: 50%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; z-index: 2; border: 2px solid var(--bg-card); }
 
         /* 曜日顏色 */
         .day-1 { border-left-color: var(--d-1); } .day-1.active { border-color: var(--d-1); color: var(--d-1); }
@@ -145,21 +77,13 @@
         #addVenueForm { background: var(--bg-input); }
         .adjust-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .adjust-title { font-weight: bold; color: var(--accent); font-size: 1.1rem; }
-        .btn-toggle-edit { 
-            background: transparent; border: 1px solid var(--text-secondary); color: var(--text-secondary);
-            padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s;
-        }
+        .btn-toggle-edit { background: transparent; border: 1px solid var(--text-secondary); color: var(--text-secondary); padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
         .btn-toggle-edit.active { background: var(--bg-input); color: var(--accent); border-color: var(--accent); }
         #adjustContent { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); }
         
-        /* 數值調整器 (Stepper) */
         .adjust-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .stepper-group { display: flex; align-items: center; gap: 8px; background: var(--bg-input); padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
-        .step-btn { 
-            width: 36px; height: 36px; background: var(--bg-card); border: none; color: white; 
-            border-radius: 8px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
-            transition: 0.1s;
-        }
+        .step-btn { width: 36px; height: 36px; background: var(--bg-card); border: none; color: white; border-radius: 8px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
         .step-btn:active { background: var(--accent); color: var(--bg-main); }
         .step-val { width: 60px; text-align: center; font-size: 1.1rem; font-weight: bold; font-family: monospace; color: var(--accent); }
 
@@ -167,57 +91,29 @@
         .btn-action { flex: 1; padding: 10px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; border: none; font-weight: bold; }
         .btn-update { background: rgba(16, 185, 129, 0.2); color: var(--st-green-text); border: 1px solid var(--st-green-text); }
         .form-input { width: 100%; padding: 10px; margin-bottom: 10px; background: var(--bg-main); border: 1px solid var(--border); color: white; border-radius: 8px; }
-
-        /* 霓虹紅按鈕樣式 */
-        .btn-neon-danger {
-            background: var(--neon-red-bg);
-            border: 1px solid var(--neon-red);
-            color: var(--neon-red);
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 5px var(--neon-red-bg), inset 0 0 5px var(--neon-red-bg);
-            text-shadow: 0 0 2px var(--neon-red-glow);
-        }
-        .btn-neon-danger:active { transform: scale(0.96); box-shadow: 0 0 2px var(--neon-red-glow); }
-        .btn-neon-danger:hover { box-shadow: 0 0 15px var(--neon-red-glow); }
-
-        /* 球種 */
-        .ball-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
-        .ball-btn { background: var(--bg-main); border: 1px solid var(--border); color: var(--text-secondary); padding: 14px; text-align: center; cursor: pointer; border-radius: 12px; position: relative; transition: 0.2s; }
-        .ball-btn.active { background: var(--bg-input); color: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px rgba(56, 189, 248, 0.15); }
-        .ball-del-btn { position: absolute; top: -5px; right: -5px; width: 22px; height: 22px; background: var(--neon-red); color: white; border-radius: 50%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; z-index: 2; border: 2px solid var(--bg-card); }
-        .edit-toggle { font-size: 0.8rem; color: var(--accent); cursor: pointer; text-decoration: underline; }
-        .ball-btn:hover { border-color: var(--text-secondary); transform: translateY(-2px); }
-
-        .input-row { display: flex; align-items: center; gap: 10px; margin-top: 20px; background: var(--bg-main); padding: 10px; border-radius: 12px; border: 1px solid var(--border); }
-        input[type="number"] { flex: 1; padding: 10px; border: none; background: transparent; font-size: 1.3rem; text-align: center; color: white; outline: none; }
-        .adj-btn { width: 40px; height: 40px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: white; cursor: pointer; font-size: 1.2rem; }
-        .adj-btn:hover { background: var(--border); }
+        .btn-neon-danger { background: var(--neon-red-bg); border: 1px solid var(--neon-red); color: var(--neon-red); padding: 10px; border-radius: 8px; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; cursor: pointer; position: relative; transition: all 0.3s; box-shadow: 0 0 5px var(--neon-red-bg), inset 0 0 5px var(--neon-red-bg); text-shadow: 0 0 2px var(--neon-red-glow); }
+        .btn-neon-danger:active { transform: scale(0.96); } .btn-neon-danger:hover { box-shadow: 0 0 15px var(--neon-red-glow); }
         
-        /* 動作按鈕群 */
+        /* 庫存控制面板 */
+        .stock-panel { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .stock-row { display: grid; grid-template-columns: 80px 1fr; align-items: center; gap: 10px; padding: 8px; border-radius: 10px; background: rgba(255,255,255,0.03); }
+        .stock-row.main { background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); } 
+        .stock-label { font-size: 0.9rem; color: var(--text-secondary); text-align: right; padding-right: 5px; font-weight: bold; }
+        .num-control { display: flex; align-items: center; gap: 5px; width: 100%; }
+        .num-btn { width: 40px; height: 40px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .num-btn:active { background: var(--accent); color: var(--bg-main); }
+        .num-input { flex: 1; height: 40px; background: transparent; border: none; text-align: center; color: white; font-size: 1.2rem; font-family: monospace; font-weight: bold; width: 50px; outline: none; }
+        
         .save-actions { display: flex; gap: 10px; margin-top: 20px; }
         .btn-save { flex: 2; padding: 16px; background: var(--accent); color: #0f172a; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: 0.2s; }
         .btn-save:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
         .btn-copy { flex: 1; padding: 16px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 14px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-copy:hover { background: var(--border); }
 
         /* 歷史區塊 */
-        .venue-group { 
-            margin-top: 25px; background: var(--bg-main); 
-            border-radius: 14px; overflow: hidden; 
-            border: 1px solid var(--border); 
-            border-left-width: 6px; 
-        }
+        .venue-group { margin-top: 25px; background: var(--bg-main); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); border-left-width: 6px; }
         .group-header { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-input); }
         .gh-title { font-size: 1.1rem; font-weight: 800; }
         
-        /* 曜日顏色連動 */
         .day-1 { border-left-color: var(--d-1); } .day-1 .gh-title { color: var(--d-1); }
         .day-2 { border-left-color: var(--d-2); } .day-2 .gh-title { color: var(--d-2); }
         .day-3 { border-left-color: var(--d-3); } .day-3 .gh-title { color: var(--d-3); }
@@ -227,78 +123,50 @@
         .day-0 { border-left-color: var(--d-0); } .day-0 .gh-title { color: var(--d-0); }
         .day-temp { border-left-color: var(--d-temp); } .day-temp .gh-title { color: var(--d-temp); }
 
-        /* 月度戰情卡片 */
-        .month-dashboard {
-            display: flex; gap: 10px; padding: 10px; overflow-x: auto;
-            background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border);
-        }
-        .month-card {
-            min-width: 130px; background: rgba(255,255,255,0.03); 
-            border: 1px solid var(--border); border-radius: 10px; padding: 10px;
-            display: flex; flex-direction: column; gap: 4px;
-            border-top: 3px solid transparent; 
-        }
-        /* 月卡配色連動 */
-        .day-1 .month-card { border-top-color: var(--d-1); }
-        .day-2 .month-card { border-top-color: var(--d-2); }
-        .day-3 .month-card { border-top-color: var(--d-3); }
-        .day-4 .month-card { border-top-color: var(--d-4); }
-        .day-5 .month-card { border-top-color: var(--d-5); }
-        .day-6 .month-card { border-top-color: var(--d-6); }
-        .day-0 .month-card { border-top-color: var(--d-0); }
-
+        .month-dashboard { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); }
+        .month-card { min-width: 140px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 4px; border-top: 3px solid transparent; }
+        .day-1 .month-card { border-top-color: var(--d-1); } .day-2 .month-card { border-top-color: var(--d-2); } .day-3 .month-card { border-top-color: var(--d-3); }
+        .day-4 .month-card { border-top-color: var(--d-4); } .day-5 .month-card { border-top-color: var(--d-5); } .day-6 .month-card { border-top-color: var(--d-6); } .day-0 .month-card { border-top-color: var(--d-0); }
         .mc-header { font-size: 0.85rem; font-weight: bold; color: var(--text-primary); border-bottom: 1px dashed var(--border); padding-bottom: 5px; margin-bottom: 5px; text-align: center; }
-        .mc-row { display: flex; justify-content: space-between; font-size: 0.75rem; }
-        .mc-label { color: var(--text-secondary); }
-        .mc-val { font-weight: bold; color: var(--text-primary); }
+        .mc-row { display: flex; justify-content: space-between; font-size: 0.75rem; } .mc-label { color: var(--text-secondary); } .mc-val { font-weight: bold; color: var(--text-primary); }
+        .mc-stock { margin-top: 5px; padding-top: 5px; border-top: 1px dotted var(--border); text-align: center; font-size: 0.8rem; color: var(--text-secondary); }
+        .mc-stock-val { font-size: 1.1rem; font-weight: 800; color: #fbbf24; }
+        .low-stock { color: var(--neon-red) !important; text-shadow: 0 0 5px var(--neon-red); }
 
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        th { text-align: center; padding: 10px 5px; color: var(--text-secondary); border-bottom: 1px solid var(--border); font-size: 0.75rem; }
-        td { padding: 12px 5px; border-bottom: 1px solid var(--border); color: var(--text-primary); text-align: center; }
+        /* 表格優化 */
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { text-align: center; padding: 12px 5px; color: var(--text-secondary); border-bottom: 1px solid var(--border); font-size: 0.75rem; font-weight: normal; }
+        td { padding: 12px 5px; border-bottom: 1px solid var(--border); color: var(--text-primary); text-align: center; vertical-align: middle; }
         
-        .badge { padding: 3px 6px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; display: inline-block; white-space: nowrap; }
-        .st-green { background: var(--st-green-bg); color: var(--st-green-text); }
-        .st-yellow { background: var(--st-yellow-bg); color: var(--st-yellow-text); }
-        .st-red { background: var(--st-red-bg); color: var(--st-red-text); }
+        /* 整合型 Badge */
+        .badge-combined { 
+            padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; 
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            white-space: nowrap; min-width: 80px;
+        }
+        .st-green { background: var(--st-green-bg); color: var(--st-green-text); border: 1px solid rgba(52, 211, 153, 0.3); }
+        .st-yellow { background: var(--st-yellow-bg); color: var(--st-yellow-text); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .st-red { background: var(--st-red-bg); color: var(--st-red-text); border: 1px solid rgba(248, 113, 113, 0.3); }
 
         .btn-del-row { background: transparent; color: var(--st-red-text); border: 1px solid var(--st-red-text); border-radius: 4px; padding: 2px 8px; font-size: 0.7rem; cursor: pointer; transition: 0.2s; }
         .btn-del-row:hover { background: var(--st-red-bg); }
 
         /* HUD */
-        .summary-bar { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
-            border-top: 1px solid var(--border);
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-            padding: 10px; z-index: 999;
-        }
+        .summary-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; z-index: 999; }
         .hud-item { border-radius: 8px; padding: 6px 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
         .hud-blue { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); } .hud-blue .val { color: #60a5fa; }
         .hud-orange { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); } .hud-orange .val { color: #fbbf24; }
         .hud-purple { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); } .hud-purple .val { color: #c084fc; }
         .hud-teal { background: rgba(20, 184, 166, 0.15); border: 1px solid rgba(20, 184, 166, 0.3); } .hud-teal .val { color: #2dd4bf; }
-
-        .label { font-size: 0.6rem; color: rgba(255,255,255,0.6); margin-bottom: 2px; }
-        .val { font-size: 0.9rem; font-weight: 800; font-family: monospace; }
-        
+        .label { font-size: 0.6rem; color: rgba(255,255,255,0.6); margin-bottom: 2px; } .val { font-size: 0.9rem; font-weight: 800; font-family: monospace; }
         .action-bar { display: flex; gap: 10px; margin-top: 15px; }
         .btn-act { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-secondary); cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-act:hover { background: var(--border); }
         
-        /* 載入中遮罩 */
-        #loader {
-            position: fixed; top:0; left:0; right:0; bottom:0; background: var(--bg-main);
-            display: flex; justify-content: center; align-items: center; flex-direction: column;
-            z-index: 2000; transition: opacity 0.5s;
-        }
+        #loader { position: fixed; top:0; left:0; right:0; bottom:0; background: var(--bg-main); display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 2000; transition: opacity 0.5s; }
         .loader-text { margin-top: 15px; color: var(--accent); font-weight: bold; letter-spacing: 2px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-        
-        .init-btn {
-            background: var(--d-3); color: white; padding: 12px; border-radius: 12px; border: none; font-size: 1rem; font-weight: bold;
-            cursor: pointer; margin-bottom: 20px; display: none; width: 100%; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-            border: 1px solid var(--accent);
-        }
+        .init-btn { background: var(--d-3); color: white; padding: 12px; border-radius: 12px; border: none; font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 20px; display: none; width: 100%; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); border: 1px solid var(--accent); }
     </style>
 </head>
 <body>
@@ -308,7 +176,7 @@
     <div class="loader-text">CONNECTING TO MOTHER SHIP...</div>
 </div>
 
-<h1>曜日羽球｜<span>星際後勤指揮部 v2.2</span></h1>
+<h1>曜日羽球｜<span>星際補給母艦 v2.9</span></h1>
 
 <div class="dashboard-container">
 
@@ -341,30 +209,10 @@
                 <span id="adjustTitle" class="adjust-title"></span>
                 <button id="btnEditToggle" class="btn-toggle-edit" onclick="toggleEditPanel()">⚙️ 調整規格</button>
             </div>
-            
             <div id="adjustContent">
-                <div class="adjust-row">
-                    <span>面數 (Court)</span>
-                    <div class="stepper-group">
-                        <button class="step-btn" onclick="adjVenueParam('court', -1)">-</button>
-                        <span id="dispCourt" class="step-val">0</span>
-                        <button class="step-btn" onclick="adjVenueParam('court', 1)">+</button>
-                    </div>
-                </div>
-
-                <div class="adjust-row">
-                    <span>時數 (Hour)</span>
-                    <div class="stepper-group">
-                        <button class="step-btn" onclick="adjVenueParam('hr', -0.5)">-</button>
-                        <span id="dispHr" class="step-val">0</span>
-                        <button class="step-btn" onclick="adjVenueParam('hr', 0.5)">+</button>
-                    </div>
-                </div>
-
-                <div style="text-align:right; font-size:0.85rem; color:var(--text-secondary); margin-top:5px;">
-                    總場時 (面×時): <span id="dispTotalFH" style="color:var(--text-primary); font-weight:bold;">0</span>
-                </div>
-                
+                <div class="adjust-row"><span>面數</span><div class="stepper-group"><button class="step-btn" onclick="adjVenueParam('court', -1)">-</button><span id="dispCourt" class="step-val">0</span><button class="step-btn" onclick="adjVenueParam('court', 1)">+</button></div></div>
+                <div class="adjust-row"><span>時數</span><div class="stepper-group"><button class="step-btn" onclick="adjVenueParam('hr', -0.5)">-</button><span id="dispHr" class="step-val">0</span><button class="step-btn" onclick="adjVenueParam('hr', 0.5)">+</button></div></div>
+                <div style="text-align:right; font-size:0.85rem; color:var(--text-secondary); margin-top:5px;">總場時: <span id="dispTotalFH" style="color:var(--text-primary); font-weight:bold;">0</span></div>
                 <div id="fixedVenueActions" class="manage-actions" style="display:none;">
                     <button class="btn-action btn-update" onclick="updateFixedVenue()">💾 更新預設</button>
                     <button class="btn-action btn-neon-danger" onclick="deleteFixedVenue()">🗑 移除班表</button>
@@ -375,15 +223,29 @@
 
     <div class="card area-ball">
         <h2>
-            2. 球種消耗
+            2. 球種 & 彈藥庫
             <span class="edit-toggle" onclick="toggleBallEdit()">編輯模式</span>
         </h2>
         <div id="ballArea" class="ball-grid"></div>
 
-        <div class="input-row">
-            <button class="adj-btn" onclick="adjCount(-1)">-</button>
-            <input type="number" id="inpCount" value="12">
-            <button class="adj-btn" onclick="adjCount(1)">+</button>
+        <div class="stock-panel">
+            <div class="stock-row main">
+                <div class="stock-label">🔥 本場消耗</div>
+                <div class="num-control">
+                    <button class="num-btn" onclick="adjVal('inpCount', -1)">-</button>
+                    <input type="number" id="inpCount" class="num-input" value="12">
+                    <button class="num-btn" onclick="adjVal('inpCount', 1)">+</button>
+                </div>
+            </div>
+            <div class="stock-row">
+                <div class="stock-label" style="color:#4ade80;">➕ 補充 (桶)</div>
+                <div class="num-control">
+                    <button class="num-btn" onclick="adjVal('inpRestockTube', -1)">-</button>
+                    <input type="number" id="inpRestockTube" class="num-input" value="0">
+                    <button class="num-btn" onclick="adjVal('inpRestockTube', 1)">+</button>
+                </div>
+            </div>
+            <div style="text-align:right; font-size:0.7rem; color:#64748b;">* 1 桶 = 12 顆</div>
         </div>
         
         <div class="save-actions">
@@ -401,7 +263,9 @@
         </div>
     </div>
 
-</div> <div class="summary-bar">
+</div>
+
+<div class="summary-bar">
     <div class="hud-item hud-blue"><div class="label">總成本</div><div class="val" id="footCost">$0</div></div>
     <div class="hud-item hud-orange"><div class="label">總耗球</div><div class="val" id="footBall">0</div></div>
     <div class="hud-item hud-purple"><div class="label">CPCH</div><div class="val" id="footCPCH">0.0</div></div>
@@ -409,11 +273,9 @@
 </div>
 
 <script type="module">
-    // 引入 Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // 艦長阿錠提供的通訊密碼
     const firebaseConfig = {
       apiKey: "AIzaSyCol2fTV9wPfIuJThes5AivLDghIeFHwx8",
       authDomain: "starship-badminton.firebaseapp.com",
@@ -423,69 +285,46 @@
       appId: "1:727787756995:web:383e8d0a2055164135f176"
     };
 
-    // 初始化 Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 全域變數
     let schedule = { 0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[] };
     let balls = [];
     let records = [];
-    
-    // UI 變數
     let currentVenue = null; 
     let selectedBall = null;
     let isBallEditMode = false;
     let isDbLoaded = { sched: false, ball: false, rec: false };
 
-    // 檢查是否載入完成
     function checkLoader() {
         if(isDbLoaded.sched && isDbLoaded.ball && isDbLoaded.rec) {
             document.getElementById('loader').style.opacity = 0;
             setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 500);
-            
-            // 如果資料庫是空的，顯示初始化按鈕
             let totalSched = Object.values(schedule).flat().length;
-            if(totalSched === 0 && balls.length === 0) {
-                document.getElementById('btnInitData').style.display = 'block';
-            } else {
-                document.getElementById('btnInitData').style.display = 'none';
-            }
+            document.getElementById('btnInitData').style.display = (totalSched === 0 && balls.length === 0) ? 'block' : 'none';
         }
     }
 
-    // === 即時監聽器 (Real-time Listeners) ===
     onSnapshot(collection(db, "schedules"), (snapshot) => {
         schedule = { 0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[] };
         snapshot.forEach((doc) => {
             const d = doc.data();
-            if(schedule[d.dayIndex]) {
-                schedule[d.dayIndex].push({ id: doc.id, ...d });
-            }
+            if(schedule[d.dayIndex]) schedule[d.dayIndex].push({ id: doc.id, ...d });
         });
-        isDbLoaded.sched = true; checkLoader();
-        handleDateChange();
+        isDbLoaded.sched = true; checkLoader(); handleDateChange();
     });
 
     onSnapshot(query(collection(db, "balls"), orderBy("price")), (snapshot) => {
-        balls = [];
-        snapshot.forEach((doc) => {
-            balls.push({ id: doc.id, ...doc.data() });
-        });
-        isDbLoaded.ball = true; checkLoader();
-        renderBalls();
+        balls = []; snapshot.forEach((doc) => balls.push({ id: doc.id, ...doc.data() }));
+        isDbLoaded.ball = true; checkLoader(); renderBalls();
     });
 
-    onSnapshot(query(collection(db, "records"), orderBy("date", "desc")), (snapshot) => {
-        records = [];
-        snapshot.forEach((doc) => {
-            records.push({ id: doc.id, ...doc.data() });
-        });
-        isDbLoaded.rec = true; checkLoader();
-        refreshUI();
+    onSnapshot(query(collection(db, "records"), orderBy("date", "asc")), (snapshot) => { 
+        records = []; snapshot.forEach((doc) => records.push({ id: doc.id, ...doc.data() }));
+        records.sort((a,b) => new Date(a.date) - new Date(b.date)); 
+        isDbLoaded.rec = true; checkLoader(); refreshUI();
     });
 
-    // === 全域函式掛載 ===
     window.handleDateChange = handleDateChange;
     window.toggleAddVenue = toggleAddVenue;
     window.confirmAddVenue = confirmAddVenue;
@@ -498,7 +337,7 @@
     window.addNewBall = addNewBall;
     window.deleteBall = deleteBall;
     window.selectBall = selectBall;
-    window.adjCount = adjCount;
+    window.adjVal = adjVal;
     window.saveRecord = saveRecord;
     window.copyToClipboard = copyToClipboard;
     window.delRecord = delRecord;
@@ -506,23 +345,18 @@
     window.exportData = exportData;
     window.initDefaultData = initDefaultData;
 
-    // === UI 邏輯 ===
-    
     function handleDateChange() {
         const dateVal = document.getElementById('pickerDate').value;
         if (!dateVal) return;
         localStorage.setItem('yao_last_date', dateVal); 
-        const dayIndex = new Date(dateVal).getDay(); 
-        renderVenueGrid(dayIndex);
+        renderVenueGrid(new Date(dateVal).getDay());
     }
 
     function renderVenueGrid(dayIndex) {
-        const container = document.getElementById('dynamicVenueArea');
-        container.innerHTML = '';
+        const container = document.getElementById('dynamicVenueArea'); container.innerHTML = '';
         currentVenue = null;
         document.getElementById('venueAdjustPanel').style.display = 'none';
         document.getElementById('addVenueForm').style.display = 'none';
-
         const venues = schedule[dayIndex] || [];
         if (venues.length > 0) {
             venues.forEach(v => {
@@ -541,14 +375,11 @@
         currentVenue = { ...v, dayIndex: dayIndex }; 
         document.querySelectorAll('.venue-btn').forEach(b => b.classList.remove('active'));
         if(el) el.classList.add('active');
-
         document.getElementById('venueAdjustPanel').style.display = 'block';
         document.getElementById('adjustTitle').innerText = currentVenue.name;
         document.getElementById('fixedVenueActions').style.display = currentVenue.id ? 'flex' : 'none';
-        
         document.getElementById('adjustContent').style.display = 'none';
         document.getElementById('btnEditToggle').classList.remove('active');
-
         updateStepperDisplay();
         document.getElementById('addVenueForm').style.display = 'none';
     }
@@ -556,24 +387,14 @@
     function toggleEditPanel() {
         const content = document.getElementById('adjustContent');
         const btn = document.getElementById('btnEditToggle');
-        if(content.style.display === 'none' || content.style.display === '') {
-            content.style.display = 'block'; btn.classList.add('active');
-        } else {
-            content.style.display = 'none'; btn.classList.remove('active');
-        }
+        content.style.display = (content.style.display === 'none' || content.style.display === '') ? 'block' : 'none';
+        content.style.display === 'block' ? btn.classList.add('active') : btn.classList.remove('active');
     }
 
     function adjVenueParam(type, delta) {
         if(!currentVenue) return;
-        if(type === 'court') {
-            let newVal = currentVenue.court + delta;
-            if(newVal < 1) newVal = 1; 
-            currentVenue.court = newVal;
-        } else if (type === 'hr') {
-            let newVal = currentVenue.hr + delta;
-            if(newVal < 0.5) newVal = 0.5; 
-            currentVenue.hr = newVal;
-        }
+        if(type === 'court') currentVenue.court = Math.max(1, currentVenue.court + delta);
+        else if (type === 'hr') currentVenue.hr = Math.max(0.5, currentVenue.hr + delta);
         updateStepperDisplay();
     }
 
@@ -596,17 +417,13 @@
         const name = document.getElementById('nvName').value;
         const court = parseFloat(document.getElementById('nvCourt').value);
         const hr = parseFloat(document.getElementById('nvHr').value);
-        const type = document.querySelector('input[name="vType"]:checked').value;
         if(!name) return alert("請輸入名稱");
-
+        const type = document.querySelector('input[name="vType"]:checked').value;
         if(type === 'fixed') {
-            const dateVal = document.getElementById('pickerDate').value;
-            const dayIndex = new Date(dateVal).getDay();
             try {
-                await addDoc(collection(db, "schedules"), { dayIndex, name, court, hr });
-                alert("已同步至雲端班表");
-                document.getElementById('nvName').value = '';
-            } catch(e) { console.error(e); alert("寫入失敗，請檢查網路或權限"); }
+                await addDoc(collection(db, "schedules"), { dayIndex: new Date(document.getElementById('pickerDate').value).getDay(), name, court, hr });
+                alert("已同步至雲端班表"); document.getElementById('nvName').value = '';
+            } catch(e) { alert("寫入失敗"); }
         } else {
             currentVenue = { name, court, hr, cid: 'temp' };
             document.getElementById('addVenueForm').style.display = 'none';
@@ -620,16 +437,11 @@
 
     async function updateFixedVenue() {
         if(!currentVenue.id) return;
-        try {
-            const ref = doc(db, "schedules", currentVenue.id);
-            await updateDoc(ref, { court: currentVenue.court, hr: currentVenue.hr });
-            alert("雲端班表已更新！");
-        } catch(e) { alert("更新失敗"); }
+        try { await updateDoc(doc(db, "schedules", currentVenue.id), { court: currentVenue.court, hr: currentVenue.hr }); alert("雲端班表已更新！"); } catch(e) { alert("更新失敗"); }
     }
 
     async function deleteFixedVenue() {
-        if(!currentVenue.id) return;
-        if(!confirm(`⚠️ 確定要從雲端移除【${currentVenue.name}】的班表嗎？`)) return;
+        if(!currentVenue.id || !confirm(`⚠️ 確定要從雲端移除【${currentVenue.name}】的班表嗎？`)) return;
         try { await deleteDoc(doc(db, "schedules", currentVenue.id)); } catch(e) { alert("刪除失敗"); }
     }
 
@@ -640,15 +452,12 @@
             const btn = document.createElement('div');
             btn.className = 'ball-btn'; btn.innerText = `${b.name} $${b.price}`;
             if(isBallEditMode) {
-                const delIcon = document.createElement('div');
-                delIcon.className = 'ball-del-btn'; delIcon.innerText = '×';
-                delIcon.onclick = (e) => { e.stopPropagation(); deleteBall(b.id); };
-                btn.appendChild(delIcon); btn.style.borderColor = 'var(--neon-red)';
+                const delIcon = document.createElement('div'); delIcon.className = 'ball-del-btn'; delIcon.innerText = '×';
+                delIcon.onclick = (e) => { e.stopPropagation(); deleteBall(b.id); }; btn.appendChild(delIcon); btn.style.borderColor = 'var(--neon-red)';
             } else { btn.onclick = () => selectBall(b, btn); }
             container.appendChild(btn);
         });
-        const addBtn = document.createElement('div');
-        addBtn.className = 'ball-btn'; addBtn.style.border = '1px dashed #94a3b8'; addBtn.innerText = '＋ 新增';
+        const addBtn = document.createElement('div'); addBtn.className = 'ball-btn'; addBtn.style.border = '1px dashed #94a3b8'; addBtn.innerText = '＋ 新增';
         addBtn.onclick = addNewBall; container.appendChild(addBtn);
     }
     
@@ -658,39 +467,61 @@
         try { await addDoc(collection(db, "balls"), { name, price: parseFloat(price) }); } catch(e) { alert("新增失敗"); }
     }
     
-    async function deleteBall(id) { 
-        if(!confirm("從雲端刪除此球種？")) return;
-        try { await deleteDoc(doc(db, "balls", id)); } catch(e){ alert("刪除失敗"); }
-    }
+    async function deleteBall(id) { if(!confirm("從雲端刪除此球種？")) return; try { await deleteDoc(doc(db, "balls", id)); } catch(e){ alert("刪除失敗"); } }
     
     function selectBall(b, el) { selectedBall = b; document.querySelectorAll('.ball-btn').forEach(btn => btn.classList.remove('active')); el.classList.add('active'); }
-    function adjCount(n) { const el = document.getElementById('inpCount'); el.value = Math.max(0, (parseInt(el.value)||0) + n); }
+    
+    function adjVal(id, n) { 
+        const el = document.getElementById(id); 
+        el.value = Math.max(0, (parseInt(el.value)||0) + n); 
+    }
 
     async function saveRecord() {
         if (!currentVenue) return alert("❌ 請選擇場地");
         if (!selectedBall) return alert("❌ 請選擇球種");
         
         const dateVal = document.getElementById('pickerDate').value;
-        const count = parseFloat(document.getElementById('inpCount').value) || 0;
+        const count = parseFloat(document.getElementById('inpCount').value) || 0; // 消耗 (顆)
+        const restockTube = parseFloat(document.getElementById('inpRestockTube').value) || 0; // 補給 (桶)
+        const restockBalls = restockTube * 12; // 轉換為顆
+        
         const cost = selectedBall.price * count;
         const fh = currentVenue.court * currentVenue.hr;
         const dayIdx = new Date(dateVal).getDay();
 
+        // 防呆檢查
+        const existingRec = records.find(r => r.date === dateVal && r.vName === currentVenue.name);
+        
+        const recordData = {
+            date: dateVal, vName: currentVenue.name, dayIdx,
+            fh, bName: selectedBall.name, 
+            count, cost, 
+            restock: restockBalls, 
+            timestamp: Date.now()
+        };
+
         try {
-            await addDoc(collection(db, "records"), {
-                date: dateVal, vName: currentVenue.name, dayIdx,
-                fh, bName: selectedBall.name, count, cost,
-                timestamp: Date.now()
-            });
-            alert("✅ 已上傳至星際雲端");
-        } catch(e) { alert("上傳失敗"); console.error(e); }
+            if (existingRec) {
+                if (confirm(`⚠️ 警告：\n${dateVal} 的【${currentVenue.name}】已經有一筆紀錄了！\n\n要「覆蓋」掉原本的資料嗎？`)) {
+                    await updateDoc(doc(db, "records", existingRec.id), recordData);
+                    alert("✅ 資料已覆蓋更新");
+                } else {
+                    return; 
+                }
+            } else {
+                await addDoc(collection(db, "records"), recordData);
+                alert("✅ 已上傳");
+            }
+            document.getElementById('inpRestockTube').value = 0;
+        } catch(e) { alert("上傳失敗"); }
     }
 
     function copyToClipboard() {
         if (!currentVenue || !selectedBall) return alert("❌ 請先選擇場地與球種");
-        
         const dateVal = document.getElementById('pickerDate').value;
         const count = document.getElementById('inpCount').value;
+        const restockTube = document.getElementById('inpRestockTube').value;
+        
         const totalCost = Math.round(selectedBall.price * count);
         const totalFH = (currentVenue.court * currentVenue.hr);
         const cpch = totalFH > 0 ? (count / totalFH).toFixed(2) : "0.00";
@@ -700,7 +531,8 @@
 📅 日期：${dateVal}
 -------------------
 🏟 場地：${currentVenue.court} 面 / ${currentVenue.hr} 小時
-🏸 耗球：${count} 顆 (${selectedBall.name})
+🏸 耗球：${count} 顆
+➕ 補給：${restockTube} 桶
 💰 總金：$${totalCost}
 📊 CPCH：${cpch}
 -------------------
@@ -710,13 +542,8 @@
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(() => { alert("✅ 已複製"); }).catch(err => alert("複製失敗"));
         } else {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand("copy");
-            document.body.removeChild(textArea);
-            alert("✅ 已複製");
+            const textArea = document.createElement("textarea"); textArea.value = text; document.body.appendChild(textArea);
+            textArea.select(); document.execCommand("copy"); document.body.removeChild(textArea); alert("✅ 已複製");
         }
     }
 
@@ -727,61 +554,87 @@
         records.forEach(r => {
             tCost += r.cost; tBall += r.count; tFH += r.fh;
             if(!grouped[r.vName]) {
-                grouped[r.vName] = { list: [], total: 0, dayIdx: r.dayIdx, monthly: {} };
+                grouped[r.vName] = { 
+                    list: [], total: 0, dayIdx: r.dayIdx, 
+                    currentStock: 0, 
+                    monthly: {} 
+                };
             }
+            
+            // 計算庫存
+            grouped[r.vName].currentStock += (r.restock || 0) - r.count;
+            r.snapshotStock = grouped[r.vName].currentStock;
+
             grouped[r.vName].list.push(r);
             grouped[r.vName].total += r.cost;
 
+            // 月度統計
             const mKey = r.date.slice(0, 7); 
-            if(!grouped[r.vName].monthly[mKey]) grouped[r.vName].monthly[mKey] = { count: 0, cost: 0, fh: 0 };
+            if(!grouped[r.vName].monthly[mKey]) grouped[r.vName].monthly[mKey] = { count: 0, cost: 0, fh: 0, endStock: 0 };
             grouped[r.vName].monthly[mKey].count += r.count;
             grouped[r.vName].monthly[mKey].cost += r.cost;
             grouped[r.vName].monthly[mKey].fh += r.fh;
+            grouped[r.vName].monthly[mKey].endStock = grouped[r.vName].currentStock;
         });
 
-        const container = document.getElementById('historyContainer');
-        container.innerHTML = '';
+        const container = document.getElementById('historyContainer'); container.innerHTML = '';
         
         Object.keys(grouped).forEach(vName => {
             const g = grouped[vName];
             const cls = g.dayIdx !== undefined ? `day-${g.dayIdx}` : 'day-temp';
             
+            const reversedList = [...g.list].reverse();
+
             let monthHtml = '';
             Object.keys(g.monthly).sort().reverse().forEach(m => {
                 const md = g.monthly[m];
                 const m_avg = md.fh > 0 ? Math.round(md.cost / md.fh) : 0;
+                const stockClass = md.endStock < 24 ? "low-stock" : "";
                 monthHtml += `
                     <div class="month-card">
                         <div class="mc-header">${m}</div>
                         <div class="mc-row"><span class="mc-label">耗球</span><span class="mc-val" style="color:var(--accent)">${md.count}</span></div>
                         <div class="mc-row"><span class="mc-label">開銷</span><span class="mc-val">$${md.cost}</span></div>
                         <div class="mc-row"><span class="mc-label">均/hr</span><span class="mc-val">$${m_avg}</span></div>
+                        <div class="mc-stock">
+                            <div style="margin-bottom:2px;">📦 月末庫存</div>
+                            <div class="mc-stock-val ${stockClass}">${md.endStock} <span style="font-size:0.8rem;opacity:0.7;">顆</span></div>
+                        </div>
                     </div>
                 `;
             });
 
             const html = `
                 <div class="venue-group ${cls}">
-                    <div class="group-header">
-                        <span class="gh-title">${vName}</span>
-                        <span>$${Math.round(g.total).toLocaleString()}</span>
-                    </div>
-                    
+                    <div class="group-header"><span class="gh-title">${vName}</span><span>$${Math.round(g.total).toLocaleString()}</span></div>
                     <div class="month-dashboard">${monthHtml}</div>
-
                     <table>
-                        <thead><tr><th>日期</th><th>耗球</th><th>CPCH</th><th>$/FH</th><th>刪</th></tr></thead>
+                        <thead><tr><th>日期</th><th>補給/耗損</th><th>健康度</th><th>$/FH</th><th>刪</th></tr></thead>
                         <tbody>
-                            ${g.list.map(i => {
+                            ${reversedList.map(i => {
                                 const cpch = i.fh > 0 ? (i.count/i.fh).toFixed(2) : 0;
                                 const costPerFH = i.fh > 0 ? Math.round(i.cost / i.fh) : 0;
-                                let b = 'st-green', t='極省';
-                                if(cpch > 4.0){ b='st-red'; t='過載'; } 
-                                else if(cpch >= 2.5){ b='st-yellow'; t='正常'; }
+                                
+                                // 整合型 Badge
+                                let badgeClass = '';
+                                let labelText = '';
+                                if(cpch <= 2.5) { badgeClass = 'st-green'; labelText = '極省'; }
+                                else if(cpch <= 4.0) { badgeClass = 'st-yellow'; labelText = '正常'; }
+                                else { badgeClass = 'st-red'; labelText = '高損'; }
+                                
+                                const badgeHtml = `<span class="badge-combined ${badgeClass}">${labelText} <span style="opacity:0.3;">|</span> ${cpch}</span>`;
+                                
+                                let stockDisplay = `<div style="font-size:0.9rem; font-weight:bold;">
+                                    <span style="color:#f87171;">-${i.count}</span>`;
+                                if(i.restock > 0) {
+                                    stockDisplay += ` <span style="color:#34d399; margin-left:5px;">+${i.restock}</span>`;
+                                }
+                                stockDisplay += `</div>`;
+
                                 return `<tr>
                                     <td>${i.date.slice(5)}</td>
-                                    <td>${i.count}</td>
-                                    <td><span class="badge ${b}">${t} ${cpch}</span></td>
+                                    <td>${stockDisplay}</td>
+                                    <td>${badgeHtml}</td>
                                     <td style="color:var(--text-secondary);">$${costPerFH}</td>
                                     <td><button class="btn-del-row" onclick="delRecord('${i.id}')">×</button></td>
                                 </tr>`;
@@ -798,11 +651,7 @@
         document.getElementById('footAvgCost').innerText = "$" + (tFH>0 ? Math.round(tCost/tFH) : 0);
     }
 
-    async function delRecord(id){ 
-        if(confirm("確定刪除此筆紀錄？")){ 
-            try { await deleteDoc(doc(db, "records", id)); } catch(e){ alert("刪除失敗"); }
-        } 
-    }
+    async function delRecord(id){ if(confirm("確定刪除此筆紀錄？")){ try { await deleteDoc(doc(db, "records", id)); } catch(e){ alert("刪除失敗"); } } }
     
     async function clearData(){ 
         const pwd = prompt("☢️ 核彈發射程序啟動 ☢️\n\n警告：這將從雲端永久清除所有歷史資料！\n\n請輸入艦長授權密碼：");
@@ -817,12 +666,12 @@
     
     function exportData() {
         if(records.length===0) return alert("目前無資料可匯出");
-        let csv = "\uFEFF日期,場地,球種,場時,耗球,總金額,CPCH,每場時成本($/FH),狀態\n";
+        let csv = "\uFEFF日期,場地,球種,場時,耗球,補給(顆),庫存(顆),總金額,CPCH,每場時成本($/FH),狀態\n";
         records.forEach(r => {
             const cpch = r.fh>0 ? (r.count/r.fh).toFixed(2) : 0;
             const costPerFH = r.fh>0 ? Math.round(r.cost/r.fh) : 0;
             let st = cpch > 4 ? "過載" : (cpch >= 2.5 ? "正常" : "極省");
-            csv += `${r.date},${r.vName},${r.bName},${r.fh},${r.count},${r.cost},${cpch},${costPerFH},${st}\n`;
+            csv += `${r.date},${r.vName},${r.bName},${r.fh},${r.count},${r.restock||0},${r.snapshotStock||0},${r.cost},${cpch},${costPerFH},${st}\n`;
         });
         const url = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
         const a = document.createElement('a'); a.href=url; a.download=`曜日報表_${new Date().toISOString().slice(0,10)}.csv`; a.click();
@@ -831,11 +680,9 @@
     async function initDefaultData() {
         if(!confirm("確定要寫入預設班表和球種嗎？")) return;
         const defaultScheds = [
-            { dayIndex: 1, name: '月曜南港', court: 2, hr: 2 }, 
-            { dayIndex: 1, name: '月曜中壢', court: 4, hr: 2 },
+            { dayIndex: 1, name: '月曜南港', court: 2, hr: 2 }, { dayIndex: 1, name: '月曜中壢', court: 4, hr: 2 },
             { dayIndex: 2, name: '火曜太平', court: 3, hr: 2 },
-            { dayIndex: 3, name: '水曜七七', court: 3, hr: 2 }, 
-            { dayIndex: 3, name: '水曜二重', court: 4, hr: 2 },
+            { dayIndex: 3, name: '水曜七七', court: 3, hr: 2 }, { dayIndex: 3, name: '水曜二重', court: 4, hr: 2 },
             { dayIndex: 4, name: '木曜大同', court: 4, hr: 2 },
             { dayIndex: 6, name: '土曜興雅', court: 11, hr: 2 },
             { dayIndex: 0, name: '日曜中正', court: 2, hr: 2 }
