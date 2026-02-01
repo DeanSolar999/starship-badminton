@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>曜日羽球團 - 星際補給母艦 v3.0</title>
+    <title>曜日羽球團 - 星際補給母艦 v3.1</title>
     <style>
         /* --- 1. 核心變數 --- */
         :root {
@@ -24,63 +24,40 @@
             margin: 0; padding: 15px; padding-bottom: 120px;
         }
 
-        /* --- 2. 響應式佈局 (電腦版核心優化) --- */
-        .dashboard-container { display: flex; flex-direction: column; gap: 20px; max-width: 100%; margin: 0 auto; }
-        
+        /* --- 2. 響應式佈局 --- */
+        .dashboard-container { display: flex; flex-direction: column; gap: 20px; max-width: 1200px; margin: 0 auto; }
         @media (min-width: 768px) {
-            /* 背景與容器 */
-            body { 
-                background-color: #0b1120; /* 更深的背景 */
-                background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0b1120 60%); /* 頂部微光 */
-                min-height: 100vh;
-            }
             .dashboard-container {
-                max-width: 960px; /* 限制最大寬度，避免按鈕過寬 */
-                display: grid; 
-                grid-template-columns: 1fr 1fr;
+                display: grid; grid-template-columns: 1fr 1fr;
                 grid-template-areas: "venue ball" "history history";
                 align-items: start;
-                gap: 24px;
-                padding-top: 20px;
+                gap: 24px; padding-top: 20px;
+                max-width: 960px;
             }
-            .area-venue { grid-area: venue; } 
-            .area-ball { grid-area: ball; } 
-            .area-history { grid-area: history; }
-
-            /* 卡片懸浮感 */
-            .card {
-                border: 1px solid rgba(255,255,255,0.08);
-                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
-            }
-            /* 電腦版 HUD：懸浮膠囊樣式 */
+            .area-venue { grid-area: venue; } .area-ball { grid-area: ball; } .area-history { grid-area: history; }
+            body { background-color: #0b1120; background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0b1120 60%); min-height: 100vh; margin:0; }
+            .card { border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+            
+            /* 電腦版 HUD */
             .summary-bar { 
-                width: auto !important;
-                min-width: 600px;
-                padding: 12px 30px !important; 
-                left: 50% !important; 
-                bottom: 30px !important; /* 離底邊有距離 */
-                transform: translateX(-50%); 
-                border: 1px solid rgba(255,255,255,0.1) !important;
-                border-radius: 50px !important; /* 膠囊圓角 */
-                background: rgba(15, 23, 42, 0.85) !important;
-                backdrop-filter: blur(12px);
+                width: auto !important; min-width: 600px; padding: 12px 30px !important; 
+                left: 50% !important; bottom: 30px !important; transform: translateX(-50%); 
+                border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 50px !important;
+                background: rgba(15, 23, 42, 0.85) !important; backdrop-filter: blur(12px);
                 box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             }
             .hud-item { flex-direction: row; gap: 15px; align-items: baseline; }
-            .label { font-size: 0.8rem; margin-bottom: 0; opacity: 0.8; } 
-            .val { font-size: 1.3rem; }
-            
-            /* 表格優化 */
-            table tr:hover td { background: rgba(255,255,255,0.05); } /* 滑鼠經過變色 */
+            .label { font-size: 0.8rem; margin-bottom: 0; opacity: 0.8; } .val { font-size: 1.3rem; }
+            table tr:hover td { background: rgba(255,255,255,0.05); }
+            .venue-btn:hover, .ball-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-color: var(--text-secondary); }
+            .venue-btn.active:hover { transform: translateY(0); }
+            #loader { left:0; right:0; transform: none; }
         }
 
         /* --- 3. 通用元件 --- */
         h1 { text-align: center; margin-bottom: 25px; font-size: 1.6rem; font-weight: 800; letter-spacing: 2px; color: var(--text-primary); }
         h1 span { color: var(--accent); text-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
-        
         .card { background: var(--bg-card); border-radius: 16px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); height: 100%; }
-        
         h2 { font-size: 1.1rem; margin: 0 0 15px 0; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         
         input { transition: 0.2s; } input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2); outline: none; }
@@ -95,13 +72,6 @@
         .venue-btn.active { background: var(--bg-input); box-shadow: inset 0 0 15px rgba(0,0,0,0.5); border-color: var(--accent); transform: translateY(1px); }
         .venue-btn.active strong { color: var(--accent); }
         .ball-btn.active { background: var(--bg-input); color: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px rgba(56, 189, 248, 0.15); }
-        
-        /* 電腦版 Hover 效果 */
-        @media (min-width: 768px) {
-            .venue-btn:hover, .ball-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-color: var(--text-secondary); }
-            .venue-btn.active:hover { transform: translateY(0); }
-        }
-
         .ball-del-btn { position: absolute; top: -5px; right: -5px; width: 22px; height: 22px; background: var(--neon-red); color: white; border-radius: 50%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; z-index: 2; border: 2px solid var(--bg-card); }
 
         /* 曜日顏色 */
@@ -114,7 +84,7 @@
         .day-0 { border-left-color: var(--d-0); } .day-0.active { border-color: var(--d-0); color: var(--d-0); }
         .day-temp { border-left-color: var(--d-temp); }
 
-        /* 微調面板 */
+        /* 微調與表單 */
         #venueAdjustPanel, #addVenueForm { margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--border); display: none; }
         #addVenueForm { background: var(--bg-input); }
         .adjust-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -122,13 +92,11 @@
         .btn-toggle-edit { background: transparent; border: 1px solid var(--text-secondary); color: var(--text-secondary); padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
         .btn-toggle-edit.active { background: var(--bg-input); color: var(--accent); border-color: var(--accent); }
         #adjustContent { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); }
-        
         .adjust-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .stepper-group { display: flex; align-items: center; gap: 8px; background: var(--bg-input); padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
         .step-btn { width: 36px; height: 36px; background: var(--bg-card); border: none; color: white; border-radius: 8px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
         .step-btn:active { background: var(--accent); color: var(--bg-main); }
         .step-val { width: 60px; text-align: center; font-size: 1.1rem; font-weight: bold; font-family: monospace; color: var(--accent); }
-
         .manage-actions { display: flex; gap: 8px; margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border); }
         .btn-action { flex: 1; padding: 10px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; border: none; font-weight: bold; }
         .btn-update { background: rgba(16, 185, 129, 0.2); color: var(--st-green-text); border: 1px solid var(--st-green-text); }
@@ -152,11 +120,10 @@
         .btn-copy { flex: 1; padding: 16px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 14px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-copy:hover { background: var(--border); }
 
-        /* 歷史區塊 */
+        /* 歷史區塊與戰情卡 */
         .venue-group { margin-top: 25px; background: var(--bg-main); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); border-left-width: 6px; }
         .group-header { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-input); }
         .gh-title { font-size: 1.1rem; font-weight: 800; }
-        
         .day-1 { border-left-color: var(--d-1); } .day-1 .gh-title { color: var(--d-1); }
         .day-2 { border-left-color: var(--d-2); } .day-2 .gh-title { color: var(--d-2); }
         .day-3 { border-left-color: var(--d-3); } .day-3 .gh-title { color: var(--d-3); }
@@ -170,18 +137,28 @@
         .month-card { min-width: 140px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 4px; border-top: 3px solid transparent; }
         .day-1 .month-card { border-top-color: var(--d-1); } .day-2 .month-card { border-top-color: var(--d-2); } .day-3 .month-card { border-top-color: var(--d-3); }
         .day-4 .month-card { border-top-color: var(--d-4); } .day-5 .month-card { border-top-color: var(--d-5); } .day-6 .month-card { border-top-color: var(--d-6); } .day-0 .month-card { border-top-color: var(--d-0); }
+        
         .mc-header { font-size: 0.85rem; font-weight: bold; color: var(--text-primary); border-bottom: 1px dashed var(--border); padding-bottom: 5px; margin-bottom: 5px; text-align: center; }
         .mc-row { display: flex; justify-content: space-between; font-size: 0.75rem; } .mc-label { color: var(--text-secondary); } .mc-val { font-weight: bold; color: var(--text-primary); }
-        .mc-stock { margin-top: 5px; padding-top: 5px; border-top: 1px dotted var(--border); text-align: center; font-size: 0.8rem; color: var(--text-secondary); }
-        .mc-stock-val { font-size: 1.1rem; font-weight: 800; color: #fbbf24; }
-        .low-stock { color: var(--neon-red) !important; text-shadow: 0 0 5px var(--neon-red); }
+        
+        /* 庫存戰情儀表 (NEW) */
+        .mc-stock-box {
+            margin-top: 8px; padding: 8px 4px; border-radius: 8px; text-align: center;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
+        }
+        .mc-stock-label { font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0px; letter-spacing: 1px; }
+        .mc-stock-num { font-size: 1.5rem; font-weight: 900; font-family: monospace; line-height: 1.2; }
+        
+        /* 庫存安全等級顏色 */
+        .stock-safe { color: #4ade80; text-shadow: 0 0 10px rgba(74, 222, 128, 0.4); } /* 安全 */
+        .stock-warn { color: #facc15; text-shadow: 0 0 10px rgba(250, 204, 21, 0.4); } /* 警戒 */
+        .stock-crit { color: #f87171; text-shadow: 0 0 10px rgba(248, 113, 113, 0.4); } /* 危急 */
 
-        /* 表格優化 */
+        /* 表格與 Badge */
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th { text-align: center; padding: 12px 5px; color: var(--text-secondary); border-bottom: 1px solid var(--border); font-size: 0.75rem; font-weight: normal; }
         td { padding: 12px 5px; border-bottom: 1px solid var(--border); color: var(--text-primary); text-align: center; vertical-align: middle; }
         
-        /* 整合型 Badge */
         .badge-combined { 
             padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; 
             display: inline-flex; align-items: center; justify-content: center; gap: 6px;
@@ -219,7 +196,7 @@
     <div class="loader-text">CONNECTING TO MOTHER SHIP...</div>
 </div>
 
-<h1>曜日羽球｜<span>星際補給母艦 v3.0</span></h1>
+<h1>曜日羽球｜<span>星際補給母艦 v3.1</span></h1>
 
 <div class="dashboard-container">
 
@@ -532,7 +509,6 @@
         const fh = currentVenue.court * currentVenue.hr;
         const dayIdx = new Date(dateVal).getDay();
 
-        // 1. 防呆檢查
         const existingRec = records.find(r => r.date === dateVal && r.vName === currentVenue.name);
         
         const recordData = {
@@ -632,16 +608,24 @@
             Object.keys(g.monthly).sort().reverse().forEach(m => {
                 const md = g.monthly[m];
                 const m_avg = md.fh > 0 ? Math.round(md.cost / md.fh) : 0;
-                const stockClass = md.endStock < 24 ? "low-stock" : "";
+                
+                // 庫存燈號邏輯
+                let stockClass = '';
+                if(md.endStock >= 24) stockClass = 'stock-safe';
+                else if(md.endStock >= 12) stockClass = 'stock-warn';
+                else stockClass = 'stock-crit';
+
                 monthHtml += `
                     <div class="month-card">
                         <div class="mc-header">${m}</div>
                         <div class="mc-row"><span class="mc-label">耗球</span><span class="mc-val" style="color:var(--accent)">${md.count}</span></div>
                         <div class="mc-row"><span class="mc-label">開銷</span><span class="mc-val">$${md.cost}</span></div>
                         <div class="mc-row"><span class="mc-label">均/hr</span><span class="mc-val">$${m_avg}</span></div>
-                        <div class="mc-stock">
-                            <div style="margin-bottom:2px;">📦 月末庫存</div>
-                            <div class="mc-stock-val ${stockClass}">${md.endStock} <span style="font-size:0.8rem;opacity:0.7;">顆</span></div>
+                        <div class="mc-stock-box">
+                            <div class="mc-stock-label">月末庫存</div>
+                            <div class="mc-stock-num ${stockClass}">
+                                ${md.endStock} <span style="font-size:0.9rem; opacity:0.7;">顆</span>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -658,6 +642,7 @@
                                 const cpch = i.fh > 0 ? (i.count/i.fh).toFixed(2) : 0;
                                 const costPerFH = i.fh > 0 ? Math.round(i.cost / i.fh) : 0;
                                 
+                                // 整合型 Badge
                                 let badgeClass = '';
                                 let labelText = '';
                                 let numColor = '';
