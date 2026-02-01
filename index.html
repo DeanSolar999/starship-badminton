@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>曜日羽球團 - 星際補給母艦 v2.0</title>
+    <title>曜日羽球團 - 星際補給母艦 v2.1</title>
     <style>
         :root {
             /* 深色基底 */
@@ -41,7 +41,36 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-main); color: var(--text-primary);
             margin: 0; padding: 15px; padding-bottom: 140px;
+            /* 手機版預設填滿 */
         }
+
+        /* --- PC 版優化核心代碼 (新增) --- */
+        @media (min-width: 768px) {
+            body {
+                max-width: 480px; /* 鎖定寬度 */
+                margin: 0 auto;   /* 置中 */
+                border-left: 1px solid var(--border);
+                border-right: 1px solid var(--border);
+                min-height: 100vh;
+                box-shadow: 0 0 50px rgba(0,0,0,0.5); /* 增加立體感 */
+                background-color: #0b1120; /* 讓背景更深一點以突出中間 */
+            }
+            /* 修正底部 HUD 在電腦上跑版的問題 */
+            .summary-bar {
+                max-width: 480px;
+                left: 50% !important;
+                transform: translateX(-50%);
+                border-left: 1px solid var(--border);
+                border-right: 1px solid var(--border);
+            }
+            /* 修正載入畫面 */
+            #loader {
+                max-width: 480px;
+                left: 50% !important;
+                transform: translateX(-50%);
+            }
+        }
+        /* ------------------------------- */
 
         h1 { text-align: center; margin-bottom: 20px; font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; color: var(--text-primary); }
         h1 span { color: var(--accent); text-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
@@ -63,7 +92,7 @@
             width: 100%; padding: 12px; background: var(--bg-input); 
             border: 1px solid var(--border); border-radius: 10px; 
             color: white; font-size: 1rem; color-scheme: dark; outline: none;
-            font-weight: bold;
+            font-weight: bold; cursor: pointer;
         }
 
         /* 場地按鈕 */
@@ -78,6 +107,7 @@
         .venue-btn span { font-size: 0.75rem; opacity: 0.7; }
         .venue-btn.active { background: var(--bg-input); box-shadow: inset 0 0 15px rgba(0,0,0,0.5); border-color: var(--accent); border-left-width: 5px; }
         .venue-btn.active strong { color: var(--accent); }
+        .venue-btn:hover { background: rgba(255,255,255,0.05); } /* PC hover 效果 */
 
         /* 曜日顏色 */
         .day-1 { border-left-color: var(--d-1); } .day-1.active { border-color: var(--d-1); color: var(--d-1); }
@@ -134,6 +164,7 @@
             text-shadow: 0 0 2px var(--neon-red-glow);
         }
         .btn-neon-danger:active { transform: scale(0.96); box-shadow: 0 0 2px var(--neon-red-glow); }
+        .btn-neon-danger:hover { box-shadow: 0 0 15px var(--neon-red-glow); } /* PC Hover */
 
         /* 球種 */
         .ball-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
@@ -141,15 +172,19 @@
         .ball-btn.active { background: var(--bg-input); color: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px rgba(56, 189, 248, 0.15); }
         .ball-del-btn { position: absolute; top: -5px; right: -5px; width: 22px; height: 22px; background: var(--neon-red); color: white; border-radius: 50%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; z-index: 2; border: 2px solid var(--bg-card); }
         .edit-toggle { font-size: 0.8rem; color: var(--accent); cursor: pointer; text-decoration: underline; }
+        .ball-btn:hover { border-color: var(--text-secondary); }
 
         .input-row { display: flex; align-items: center; gap: 10px; margin-top: 20px; background: var(--bg-main); padding: 10px; border-radius: 12px; border: 1px solid var(--border); }
         input[type="number"] { flex: 1; padding: 10px; border: none; background: transparent; font-size: 1.3rem; text-align: center; color: white; outline: none; }
         .adj-btn { width: 40px; height: 40px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: white; cursor: pointer; font-size: 1.2rem; }
+        .adj-btn:hover { background: var(--border); }
         
         /* 動作按鈕群 */
         .save-actions { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-save { flex: 2; padding: 16px; background: var(--accent); color: #0f172a; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-copy { flex: 1; padding: 16px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 14px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        .btn-save { flex: 2; padding: 16px; background: var(--accent); color: #0f172a; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: 0.2s; }
+        .btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-copy { flex: 1; padding: 16px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 14px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-copy:hover { background: var(--border); }
 
         /* 歷史區塊 */
         .venue-group { 
@@ -205,7 +240,8 @@
         .st-yellow { background: var(--st-yellow-bg); color: var(--st-yellow-text); }
         .st-red { background: var(--st-red-bg); color: var(--st-red-text); }
 
-        .btn-del-row { background: transparent; color: var(--st-red-text); border: 1px solid var(--st-red-text); border-radius: 4px; padding: 2px 8px; font-size: 0.7rem; cursor: pointer; }
+        .btn-del-row { background: transparent; color: var(--st-red-text); border: 1px solid var(--st-red-text); border-radius: 4px; padding: 2px 8px; font-size: 0.7rem; cursor: pointer; transition: 0.2s; }
+        .btn-del-row:hover { background: var(--st-red-bg); }
 
         /* HUD */
         .summary-bar { 
@@ -225,7 +261,8 @@
         .val { font-size: 0.9rem; font-weight: 800; font-family: monospace; }
         
         .action-bar { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-act { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-secondary); cursor: pointer; font-weight: bold; }
+        .btn-act { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-secondary); cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-act:hover { background: var(--border); }
         
         /* 載入中遮罩 */
         #loader {
@@ -250,7 +287,7 @@
     <div class="loader-text">CONNECTING TO MOTHER SHIP...</div>
 </div>
 
-<h1>曜日羽球｜<span>星際補給母艦 v2.0</span></h1>
+<h1>曜日羽球｜<span>星際補給母艦 v2.1</span></h1>
 
 <div class="card">
     <h2>
