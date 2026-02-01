@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>曜日羽球團 - 星際補給母艦 v2.9</title>
+    <title>曜日羽球團 - 星際補給母艦 v3.0</title>
     <style>
-        /* --- 1. 核心變數與基礎設定 --- */
+        /* --- 1. 核心變數 --- */
         :root {
             --bg-main: #0f172a; --bg-card: #1e293b; --bg-input: #334155;
             --text-primary: #f1f5f9; --text-secondary: #94a3b8;
             --accent: #38bdf8; --border: #475569;
-            /* 七曜日光譜 */
             --d-1: #a855f7; --d-2: #ef4444; --d-3: #3b82f6; --d-4: #22c55e;
             --d-5: #f59e0b; --d-6: #f97316; --d-0: #eab308; --d-temp: #94a3b8;
-            /* 狀態色 */
             --neon-red: #ff1744; --neon-red-glow: rgba(255, 23, 68, 0.35); --neon-red-bg: rgba(255, 23, 68, 0.1);
             --st-green-bg: rgba(16, 185, 129, 0.15); --st-green-text: #34d399; 
             --st-yellow-bg: rgba(245, 158, 11, 0.15); --st-yellow-text: #fbbf24;
@@ -26,28 +24,63 @@
             margin: 0; padding: 15px; padding-bottom: 120px;
         }
 
-        /* --- 2. 響應式儀表板佈局 (電腦版分欄) --- */
-        .dashboard-container { display: flex; flex-direction: column; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        /* --- 2. 響應式佈局 (電腦版核心優化) --- */
+        .dashboard-container { display: flex; flex-direction: column; gap: 20px; max-width: 100%; margin: 0 auto; }
+        
         @media (min-width: 768px) {
+            /* 背景與容器 */
+            body { 
+                background-color: #0b1120; /* 更深的背景 */
+                background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0b1120 60%); /* 頂部微光 */
+                min-height: 100vh;
+            }
             .dashboard-container {
-                display: grid; grid-template-columns: 1fr 1fr;
+                max-width: 960px; /* 限制最大寬度，避免按鈕過寬 */
+                display: grid; 
+                grid-template-columns: 1fr 1fr;
                 grid-template-areas: "venue ball" "history history";
                 align-items: start;
+                gap: 24px;
+                padding-top: 20px;
             }
-            .area-venue { grid-area: venue; } .area-ball { grid-area: ball; } .area-history { grid-area: history; }
-            /* 電腦版 HUD 置中與優化 */
-            .summary-bar { padding: 15px 40px !important; left: 50% !important; transform: translateX(-50%); max-width: 600px; border-left:1px solid var(--border); border-right:1px solid var(--border); border-radius: 16px 16px 0 0; }
-            .hud-item { flex-direction: row; gap: 10px; align-items: baseline; }
-            .label { font-size: 0.8rem; margin-bottom: 0; } .val { font-size: 1.2rem; }
-            /* 電腦版視窗限制 */
-            body { max-width: 100%; margin: 0; background-color: #0b1120; }
-            #loader { left: 0; right: 0; transform: none; }
+            .area-venue { grid-area: venue; } 
+            .area-ball { grid-area: ball; } 
+            .area-history { grid-area: history; }
+
+            /* 卡片懸浮感 */
+            .card {
+                border: 1px solid rgba(255,255,255,0.08);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+            /* 電腦版 HUD：懸浮膠囊樣式 */
+            .summary-bar { 
+                width: auto !important;
+                min-width: 600px;
+                padding: 12px 30px !important; 
+                left: 50% !important; 
+                bottom: 30px !important; /* 離底邊有距離 */
+                transform: translateX(-50%); 
+                border: 1px solid rgba(255,255,255,0.1) !important;
+                border-radius: 50px !important; /* 膠囊圓角 */
+                background: rgba(15, 23, 42, 0.85) !important;
+                backdrop-filter: blur(12px);
+                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            }
+            .hud-item { flex-direction: row; gap: 15px; align-items: baseline; }
+            .label { font-size: 0.8rem; margin-bottom: 0; opacity: 0.8; } 
+            .val { font-size: 1.3rem; }
+            
+            /* 表格優化 */
+            table tr:hover td { background: rgba(255,255,255,0.05); } /* 滑鼠經過變色 */
         }
 
-        /* --- 3. 通用元件樣式 --- */
+        /* --- 3. 通用元件 --- */
         h1 { text-align: center; margin-bottom: 25px; font-size: 1.6rem; font-weight: 800; letter-spacing: 2px; color: var(--text-primary); }
         h1 span { color: var(--accent); text-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+        
         .card { background: var(--bg-card); border-radius: 16px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); height: 100%; }
+        
         h2 { font-size: 1.1rem; margin: 0 0 15px 0; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         
         input { transition: 0.2s; } input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2); outline: none; }
@@ -55,17 +88,23 @@
 
         /* 按鈕網格 */
         .venue-grid, .ball-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .venue-btn, .ball-btn { background: var(--bg-main); border: 1px solid var(--border); padding: 15px 5px; border-radius: 12px; cursor: pointer; text-align: center; color: var(--text-secondary); transition: 0.2s; position: relative; overflow: hidden; }
+        .venue-btn, .ball-btn { background: var(--bg-main); border: 1px solid var(--border); padding: 15px 5px; border-radius: 12px; cursor: pointer; text-align: center; color: var(--text-secondary); transition: all 0.2s; position: relative; overflow: hidden; }
         .venue-btn { border-left-width: 5px; }
         .venue-btn strong { display: block; font-size: 1rem; margin-bottom: 4px; color: var(--text-primary); }
         .venue-btn span { font-size: 0.75rem; opacity: 0.7; }
-        .venue-btn.active { background: var(--bg-input); box-shadow: inset 0 0 15px rgba(0,0,0,0.5); border-color: var(--accent); }
+        .venue-btn.active { background: var(--bg-input); box-shadow: inset 0 0 15px rgba(0,0,0,0.5); border-color: var(--accent); transform: translateY(1px); }
         .venue-btn.active strong { color: var(--accent); }
         .ball-btn.active { background: var(--bg-input); color: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px rgba(56, 189, 248, 0.15); }
-        .venue-btn:hover, .ball-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); border-color: var(--text-secondary); }
+        
+        /* 電腦版 Hover 效果 */
+        @media (min-width: 768px) {
+            .venue-btn:hover, .ball-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-color: var(--text-secondary); }
+            .venue-btn.active:hover { transform: translateY(0); }
+        }
+
         .ball-del-btn { position: absolute; top: -5px; right: -5px; width: 22px; height: 22px; background: var(--neon-red); color: white; border-radius: 50%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; z-index: 2; border: 2px solid var(--bg-card); }
 
-        /* 曜日顏色連動 */
+        /* 曜日顏色 */
         .day-1 { border-left-color: var(--d-1); } .day-1.active { border-color: var(--d-1); color: var(--d-1); }
         .day-2 { border-left-color: var(--d-2); } .day-2.active { border-color: var(--d-2); color: var(--d-2); }
         .day-3 { border-left-color: var(--d-3); } .day-3.active { border-color: var(--d-3); color: var(--d-3); }
@@ -75,7 +114,7 @@
         .day-0 { border-left-color: var(--d-0); } .day-0.active { border-color: var(--d-0); color: var(--d-0); }
         .day-temp { border-left-color: var(--d-temp); }
 
-        /* 微調面板與表單 */
+        /* 微調面板 */
         #venueAdjustPanel, #addVenueForm { margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--border); display: none; }
         #addVenueForm { background: var(--bg-input); }
         .adjust-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -111,6 +150,7 @@
         .btn-save { flex: 2; padding: 16px; background: var(--accent); color: #0f172a; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: 0.2s; }
         .btn-save:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
         .btn-copy { flex: 1; padding: 16px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 14px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-copy:hover { background: var(--border); }
 
         /* 歷史區塊 */
         .venue-group { margin-top: 25px; background: var(--bg-main); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); border-left-width: 6px; }
@@ -179,7 +219,7 @@
     <div class="loader-text">CONNECTING TO MOTHER SHIP...</div>
 </div>
 
-<h1>曜日羽球｜<span>星際補給母艦 v2.9</span></h1>
+<h1>曜日羽球｜<span>星際補給母艦 v3.0</span></h1>
 
 <div class="dashboard-container">
 
@@ -492,7 +532,7 @@
         const fh = currentVenue.court * currentVenue.hr;
         const dayIdx = new Date(dateVal).getDay();
 
-        // 1. 防呆檢查：搜尋是否同日期、同場地已存在資料
+        // 1. 防呆檢查
         const existingRec = records.find(r => r.date === dateVal && r.vName === currentVenue.name);
         
         const recordData = {
@@ -505,13 +545,212 @@
 
         try {
             if (existingRec) {
-                // 若重複，跳出警告確認
                 if (confirm(`⚠️ 警告：\n${dateVal} 的【${currentVenue.name}】已經有一筆紀錄了！\n\n要「覆蓋」掉原本的資料嗎？`)) {
                     await updateDoc(doc(db, "records", existingRec.id), recordData);
                     alert("✅ 資料已覆蓋更新");
                 } else {
-                    return; // 使用者取消，不動作
+                    return; 
                 }
             } else {
-                // 若無重複，正常新增
                 await addDoc(collection(db, "records"), recordData);
+                alert("✅ 已上傳");
+            }
+            document.getElementById('inpRestockTube').value = 0;
+        } catch(e) { alert("上傳失敗"); }
+    }
+
+    function copyToClipboard() {
+        if (!currentVenue || !selectedBall) return alert("❌ 請先選擇場地與球種");
+        const dateVal = document.getElementById('pickerDate').value;
+        const count = document.getElementById('inpCount').value;
+        const restockTube = document.getElementById('inpRestockTube').value;
+        
+        const totalCost = Math.round(selectedBall.price * count);
+        const totalFH = (currentVenue.court * currentVenue.hr);
+        const cpch = totalFH > 0 ? (count / totalFH).toFixed(2) : "0.00";
+        
+        const text = `
+🚀 曜日羽球｜${currentVenue.name}
+📅 日期：${dateVal}
+-------------------
+🏟 場地：${currentVenue.court} 面 / ${currentVenue.hr} 小時
+🏸 耗球：${count} 顆
+➕ 補給：${restockTube} 桶
+💰 總金：$${totalCost}
+📊 CPCH：${cpch}
+-------------------
+星際補給母艦 結算完畢
+`.trim();
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => { alert("✅ 已複製"); }).catch(err => alert("複製失敗"));
+        } else {
+            const textArea = document.createElement("textarea"); textArea.value = text; document.body.appendChild(textArea);
+            textArea.select(); document.execCommand("copy"); document.body.removeChild(textArea); alert("✅ 已複製");
+        }
+    }
+
+    function refreshUI() {
+        let tCost=0, tBall=0, tFH=0;
+        const grouped = {};
+
+        records.forEach(r => {
+            tCost += r.cost; tBall += r.count; tFH += r.fh;
+            if(!grouped[r.vName]) {
+                grouped[r.vName] = { 
+                    list: [], total: 0, dayIdx: r.dayIdx, 
+                    currentStock: 0, 
+                    monthly: {} 
+                };
+            }
+            
+            // 計算庫存
+            grouped[r.vName].currentStock += (r.restock || 0) - r.count;
+            r.snapshotStock = grouped[r.vName].currentStock;
+
+            grouped[r.vName].list.push(r);
+            grouped[r.vName].total += r.cost;
+
+            // 月度統計
+            const mKey = r.date.slice(0, 7); 
+            if(!grouped[r.vName].monthly[mKey]) grouped[r.vName].monthly[mKey] = { count: 0, cost: 0, fh: 0, endStock: 0 };
+            grouped[r.vName].monthly[mKey].count += r.count;
+            grouped[r.vName].monthly[mKey].cost += r.cost;
+            grouped[r.vName].monthly[mKey].fh += r.fh;
+            grouped[r.vName].monthly[mKey].endStock = grouped[r.vName].currentStock;
+        });
+
+        const container = document.getElementById('historyContainer'); container.innerHTML = '';
+        
+        Object.keys(grouped).forEach(vName => {
+            const g = grouped[vName];
+            const cls = g.dayIdx !== undefined ? `day-${g.dayIdx}` : 'day-temp';
+            
+            const reversedList = [...g.list].reverse();
+
+            let monthHtml = '';
+            Object.keys(g.monthly).sort().reverse().forEach(m => {
+                const md = g.monthly[m];
+                const m_avg = md.fh > 0 ? Math.round(md.cost / md.fh) : 0;
+                const stockClass = md.endStock < 24 ? "low-stock" : "";
+                monthHtml += `
+                    <div class="month-card">
+                        <div class="mc-header">${m}</div>
+                        <div class="mc-row"><span class="mc-label">耗球</span><span class="mc-val" style="color:var(--accent)">${md.count}</span></div>
+                        <div class="mc-row"><span class="mc-label">開銷</span><span class="mc-val">$${md.cost}</span></div>
+                        <div class="mc-row"><span class="mc-label">均/hr</span><span class="mc-val">$${m_avg}</span></div>
+                        <div class="mc-stock">
+                            <div style="margin-bottom:2px;">📦 月末庫存</div>
+                            <div class="mc-stock-val ${stockClass}">${md.endStock} <span style="font-size:0.8rem;opacity:0.7;">顆</span></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const html = `
+                <div class="venue-group ${cls}">
+                    <div class="group-header"><span class="gh-title">${vName}</span><span>$${Math.round(g.total).toLocaleString()}</span></div>
+                    <div class="month-dashboard">${monthHtml}</div>
+                    <table>
+                        <thead><tr><th>日期</th><th>補給/耗損</th><th>健康度</th><th>$/FH</th><th>刪</th></tr></thead>
+                        <tbody>
+                            ${reversedList.map(i => {
+                                const cpch = i.fh > 0 ? (i.count/i.fh).toFixed(2) : 0;
+                                const costPerFH = i.fh > 0 ? Math.round(i.cost / i.fh) : 0;
+                                
+                                let badgeClass = '';
+                                let labelText = '';
+                                let numColor = '';
+                                
+                                if(cpch <= 2.5) { 
+                                    badgeClass = 'st-green'; labelText = '極省'; 
+                                    numColor = 'var(--st-green-text)';
+                                }
+                                else if(cpch <= 4.0) { 
+                                    badgeClass = 'st-yellow'; labelText = '正常'; 
+                                    numColor = 'var(--st-yellow-text)';
+                                }
+                                else { 
+                                    badgeClass = 'st-red'; labelText = '高損'; 
+                                    numColor = 'var(--st-red-text)';
+                                }
+                                
+                                const badgeHtml = `<span class="badge-combined ${badgeClass}">${labelText} <span style="opacity:0.3;">|</span> <span style="color:${numColor}">${cpch}</span></span>`;
+                                
+                                let stockDisplay = `<div style="font-size:0.9rem; font-weight:bold;">
+                                    <span style="color:#f87171;">-${i.count}</span>`;
+                                if(i.restock > 0) {
+                                    stockDisplay += ` <span style="color:#34d399; margin-left:5px;">+${i.restock}</span>`;
+                                }
+                                stockDisplay += `</div>`;
+
+                                return `<tr>
+                                    <td>${i.date.slice(5)}</td>
+                                    <td>${stockDisplay}</td>
+                                    <td>${badgeHtml}</td>
+                                    <td style="color:var(--text-secondary);">$${costPerFH}</td>
+                                    <td><button class="btn-del-row" onclick="delRecord('${i.id}')">×</button></td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            container.innerHTML += html;
+        });
+
+        document.getElementById('footCost').innerText = "$"+Math.round(tCost).toLocaleString();
+        document.getElementById('footBall').innerText = tBall;
+        document.getElementById('footCPCH').innerText = tFH>0 ? (tBall/tFH).toFixed(2) : "0.0";
+        document.getElementById('footAvgCost').innerText = "$" + (tFH>0 ? Math.round(tCost/tFH) : 0);
+    }
+
+    async function delRecord(id){ if(confirm("確定刪除此筆紀錄？")){ try { await deleteDoc(doc(db, "records", id)); } catch(e){ alert("刪除失敗"); } } }
+    
+    async function clearData(){ 
+        const pwd = prompt("☢️ 核彈發射程序啟動 ☢️\n\n警告：這將從雲端永久清除所有歷史資料！\n\n請輸入艦長授權密碼：");
+        if (pwd === "841275") {
+            if(confirm("⚠️ 再次確認：真的要清空嗎？")) {
+                alert("開始清空，請稍候...");
+                for(let r of records) { await deleteDoc(doc(db, "records", r.id)); }
+                alert("💥 雲端資料已清空");
+            }
+        } else if (pwd !== null) { alert("❌ 授權密碼錯誤！存取被拒"); }
+    }
+    
+    function exportData() {
+        if(records.length===0) return alert("目前無資料可匯出");
+        let csv = "\uFEFF日期,場地,球種,場時,耗球,補給(顆),庫存(顆),總金額,CPCH,每場時成本($/FH),狀態\n";
+        records.forEach(r => {
+            const cpch = r.fh>0 ? (r.count/r.fh).toFixed(2) : 0;
+            const costPerFH = r.fh>0 ? Math.round(r.cost/r.fh) : 0;
+            let st = cpch > 4 ? "過載" : (cpch >= 2.5 ? "正常" : "極省");
+            csv += `${r.date},${r.vName},${r.bName},${r.fh},${r.count},${r.restock||0},${r.snapshotStock||0},${r.cost},${cpch},${costPerFH},${st}\n`;
+        });
+        const url = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+        const a = document.createElement('a'); a.href=url; a.download=`曜日報表_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    }
+
+    async function initDefaultData() {
+        if(!confirm("確定要寫入預設班表和球種嗎？")) return;
+        const defaultScheds = [
+            { dayIndex: 1, name: '月曜南港', court: 2, hr: 2 }, { dayIndex: 1, name: '月曜中壢', court: 4, hr: 2 },
+            { dayIndex: 2, name: '火曜太平', court: 3, hr: 2 },
+            { dayIndex: 3, name: '水曜七七', court: 3, hr: 2 }, { dayIndex: 3, name: '水曜二重', court: 4, hr: 2 },
+            { dayIndex: 4, name: '木曜大同', court: 4, hr: 2 },
+            { dayIndex: 6, name: '土曜興雅', court: 11, hr: 2 },
+            { dayIndex: 0, name: '日曜中正', court: 2, hr: 2 }
+        ];
+        const defaultBalls = [ { name: '黑魔亞', price: 67 }, { name: '藍蓋', price: 75 }, { name: 'Master', price: 92 } ];
+        try {
+            for(let s of defaultScheds) await addDoc(collection(db, "schedules"), s);
+            for(let b of defaultBalls) await addDoc(collection(db, "balls"), b);
+            alert("✅ 初始化完成！");
+        } catch(e) { console.error(e); alert("初始化失敗"); }
+    }
+
+    const lastDate = localStorage.getItem('yao_last_date');
+    document.getElementById('pickerDate').value = lastDate || new Date().toISOString().split('T')[0];
+    handleDateChange();
+</script>
+</body>
+</html>
