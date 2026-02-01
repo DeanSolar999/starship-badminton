@@ -259,3 +259,475 @@
             </div>
             <div style="text-align:right; font-size:0.7rem; color:#64748b;">* 1 桶 = 12 顆</div>
         </div>
+        
+        <div class="save-actions">
+            <button class="btn-copy" onclick="copyToClipboard()">📋 複製結算</button>
+            <button class="btn-save" onclick="saveRecord()">📥 存入紀錄</button>
+        </div>
+    </div>
+
+    <div class="card area-history">
+        <h2>3. 歷史紀錄 (月度戰情)</h2>
+        <div id="historyContainer"></div>
+        <div class="action-bar">
+            <button class="btn-act" onclick="exportData()" style="color:var(--st-green-text); border-color:var(--st-green-text);">匯出報表</button>
+            <button class="btn-act btn-neon-danger" onclick="clearData()">☢️ 清空資料</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="summary-bar">
+    <div class="hud-item hud-blue"><div class="label">總成本</div><div class="val" id="footCost">$0</div></div>
+    <div class="hud-item hud-orange"><div class="label">總耗球</div><div class="val" id="footBall">0</div></div>
+    <div class="hud-item hud-purple"><div class="label">CPCH</div><div class="val" id="footCPCH">0.0</div></div>
+    <div class="hud-item hud-teal"><div class="label">$/HR</div><div class="val" id="footAvgCost">0</div></div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCol2fTV9wPfIuJThes5AivLDghIeFHwx8",
+      authDomain: "starship-badminton.firebaseapp.com",
+      projectId: "starship-badminton",
+      storageBucket: "starship-badminton.firebasestorage.app",
+      messagingSenderId: "727787756995",
+      appId: "1:727787756995:web:383e8d0a2055164135f176"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let schedule = { 0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[] };
+    let balls = [];
+    let records = [];
+    let currentVenue = null; 
+    let selectedBall = null;
+    let isBallEditMode = false;
+    let isDbLoaded = { sched: false, ball: false, rec: false };
+
+    function checkLoader() {
+        if(isDbLoaded.sched && isDbLoaded.ball && isDbLoaded.rec) {
+            document.getElementById('loader').style.opacity = 0;
+            setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 500);
+            let totalSched = Object.values(schedule).flat().length;
+            document.getElementById('btnInitData').style.display = (totalSched === 0 && balls.length === 0) ? 'block' : 'none';
+        }
+    }
+
+    onSnapshot(collection(db, "schedules"), (snapshot) => {
+        schedule = { 0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[] };
+        snapshot.forEach((doc) => {
+            const d = doc.data();
+            if(schedule[d.dayIndex]) schedule[d.dayIndex].push({ id: doc.id, ...d });
+        });
+        isDbLoaded.sched = true; checkLoader(); handleDateChange();
+    });
+
+    onSnapshot(query(collection(db, "balls"), orderBy("price")), (snapshot) => {
+        balls = []; snapshot.forEach((doc) => balls.push({ id: doc.id, ...doc.data() }));
+        isDbLoaded.ball = true; checkLoader(); renderBalls();
+    });
+
+    onSnapshot(query(collection(db, "records"), orderBy("date", "asc")), (snapshot) => { 
+        records = []; snapshot.forEach((doc) => records.push({ id: doc.id, ...doc.data() }));
+        records.sort((a,b) => new Date(a.date) - new Date(b.date)); 
+        isDbLoaded.rec = true; checkLoader(); refreshUI();
+    });
+
+    window.handleDateChange = handleDateChange;
+    window.toggleAddVenue = toggleAddVenue;
+    window.confirmAddVenue = confirmAddVenue;
+    window.selectVenue = selectVenue;
+    window.toggleEditPanel = toggleEditPanel;
+    window.adjVenueParam = adjVenueParam;
+    window.updateFixedVenue = updateFixedVenue;
+    window.deleteFixedVenue = deleteFixedVenue;
+    window.toggleBallEdit = toggleBallEdit;
+    window.addNewBall = addNewBall;
+    window.deleteBall = deleteBall;
+    window.selectBall = selectBall;
+    window.adjVal = adjVal;
+    window.saveRecord = saveRecord;
+    window.copyToClipboard = copyToClipboard;
+    window.delRecord = delRecord;
+    window.clearData = clearData;
+    window.exportData = exportData;
+    window.initDefaultData = initDefaultData;
+
+    function handleDateChange() {
+        const dateVal = document.getElementById('pickerDate').value;
+        if (!dateVal) return;
+        localStorage.setItem('yao_last_date', dateVal); 
+        renderVenueGrid(new Date(dateVal).getDay());
+    }
+
+    function renderVenueGrid(dayIndex) {
+        const container = document.getElementById('dynamicVenueArea'); container.innerHTML = '';
+        currentVenue = null;
+        document.getElementById('venueAdjustPanel').style.display = 'none';
+        document.getElementById('addVenueForm').style.display = 'none';
+        const venues = schedule[dayIndex] || [];
+        if (venues.length > 0) {
+            venues.forEach(v => {
+                const btn = document.createElement('div');
+                btn.className = `venue-btn day-${dayIndex}`;
+                btn.innerHTML = `<strong>${v.name}</strong><span>${v.court}面 / ${v.hr}hr</span>`;
+                btn.onclick = () => selectVenue(v, btn, dayIndex);
+                container.appendChild(btn);
+            });
+        } else {
+            container.innerHTML = `<div style="grid-column:span 2; text-align:center; color:var(--text-secondary); padding:10px;">本日無固定班表</div>`;
+        }
+    }
+
+    function selectVenue(v, el, dayIndex) {
+        currentVenue = { ...v, dayIndex: dayIndex }; 
+        document.querySelectorAll('.venue-btn').forEach(b => b.classList.remove('active'));
+        if(el) el.classList.add('active');
+        document.getElementById('venueAdjustPanel').style.display = 'block';
+        document.getElementById('adjustTitle').innerText = currentVenue.name;
+        document.getElementById('fixedVenueActions').style.display = currentVenue.id ? 'flex' : 'none';
+        document.getElementById('adjustContent').style.display = 'none';
+        document.getElementById('btnEditToggle').classList.remove('active');
+        updateStepperDisplay();
+        document.getElementById('addVenueForm').style.display = 'none';
+    }
+
+    function toggleEditPanel() {
+        const content = document.getElementById('adjustContent');
+        const btn = document.getElementById('btnEditToggle');
+        content.style.display = (content.style.display === 'none' || content.style.display === '') ? 'block' : 'none';
+        content.style.display === 'block' ? btn.classList.add('active') : btn.classList.remove('active');
+    }
+
+    function adjVenueParam(type, delta) {
+        if(!currentVenue) return;
+        if(type === 'court') currentVenue.court = Math.max(1, currentVenue.court + delta);
+        else if (type === 'hr') currentVenue.hr = Math.max(0.5, currentVenue.hr + delta);
+        updateStepperDisplay();
+    }
+
+    function updateStepperDisplay() {
+        if(!currentVenue) return;
+        document.getElementById('dispCourt').innerText = currentVenue.court;
+        document.getElementById('dispHr').innerText = currentVenue.hr;
+        document.getElementById('dispTotalFH').innerText = (currentVenue.court * currentVenue.hr).toFixed(1);
+    }
+
+    function toggleAddVenue() {
+        const form = document.getElementById('addVenueForm');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        document.getElementById('venueAdjustPanel').style.display = 'none';
+        document.querySelectorAll('.venue-btn').forEach(b => b.classList.remove('active'));
+        currentVenue = null;
+    }
+
+    async function confirmAddVenue() {
+        const name = document.getElementById('nvName').value;
+        const court = parseFloat(document.getElementById('nvCourt').value);
+        const hr = parseFloat(document.getElementById('nvHr').value);
+        if(!name) return alert("請輸入名稱");
+        const type = document.querySelector('input[name="vType"]:checked').value;
+        if(type === 'fixed') {
+            try {
+                await addDoc(collection(db, "schedules"), { dayIndex: new Date(document.getElementById('pickerDate').value).getDay(), name, court, hr });
+                alert("已同步至雲端班表"); document.getElementById('nvName').value = '';
+            } catch(e) { alert("寫入失敗"); }
+        } else {
+            currentVenue = { name, court, hr, cid: 'temp' };
+            document.getElementById('addVenueForm').style.display = 'none';
+            document.getElementById('venueAdjustPanel').style.display = 'block';
+            document.getElementById('adjustTitle').innerText = name + " (臨時)";
+            document.getElementById('fixedVenueActions').style.display = 'none';
+            document.getElementById('adjustContent').style.display = 'block'; 
+            updateStepperDisplay();
+        }
+    }
+
+    async function updateFixedVenue() {
+        if(!currentVenue.id) return;
+        try { await updateDoc(doc(db, "schedules", currentVenue.id), { court: currentVenue.court, hr: currentVenue.hr }); alert("雲端班表已更新！"); } catch(e) { alert("更新失敗"); }
+    }
+
+    async function deleteFixedVenue() {
+        if(!currentVenue.id || !confirm(`⚠️ 確定要從雲端移除【${currentVenue.name}】的班表嗎？`)) return;
+        try { await deleteDoc(doc(db, "schedules", currentVenue.id)); } catch(e) { alert("刪除失敗"); }
+    }
+
+    function toggleBallEdit() { isBallEditMode = !isBallEditMode; renderBalls(); }
+    function renderBalls() {
+        const container = document.getElementById('ballArea'); container.innerHTML = '';
+        balls.forEach((b) => {
+            const btn = document.createElement('div');
+            btn.className = 'ball-btn'; btn.innerText = `${b.name} $${b.price}`;
+            if(isBallEditMode) {
+                const delIcon = document.createElement('div'); delIcon.className = 'ball-del-btn'; delIcon.innerText = '×';
+                delIcon.onclick = (e) => { e.stopPropagation(); deleteBall(b.id); }; btn.appendChild(delIcon); btn.style.borderColor = 'var(--neon-red)';
+            } else { btn.onclick = () => selectBall(b, btn); }
+            container.appendChild(btn);
+        });
+        const addBtn = document.createElement('div'); addBtn.className = 'ball-btn'; addBtn.style.border = '1px dashed #94a3b8'; addBtn.innerText = '＋ 新增';
+        addBtn.onclick = addNewBall; container.appendChild(addBtn);
+    }
+    
+    async function addNewBall() {
+        const name = prompt("名稱:"); if(!name) return;
+        const price = prompt("單價:"); if(!price) return;
+        try { await addDoc(collection(db, "balls"), { name, price: parseFloat(price) }); } catch(e) { alert("新增失敗"); }
+    }
+    
+    async function deleteBall(id) { if(!confirm("從雲端刪除此球種？")) return; try { await deleteDoc(doc(db, "balls", id)); } catch(e){ alert("刪除失敗"); } }
+    
+    function selectBall(b, el) { selectedBall = b; document.querySelectorAll('.ball-btn').forEach(btn => btn.classList.remove('active')); el.classList.add('active'); }
+    
+    function adjVal(id, n) { 
+        const el = document.getElementById(id); 
+        el.value = Math.max(0, (parseInt(el.value)||0) + n); 
+    }
+
+    async function saveRecord() {
+        if (!currentVenue) return alert("❌ 請選擇場地");
+        if (!selectedBall) return alert("❌ 請選擇球種");
+        
+        const dateVal = document.getElementById('pickerDate').value;
+        const count = parseFloat(document.getElementById('inpCount').value) || 0; // 消耗 (顆)
+        const restockTube = parseFloat(document.getElementById('inpRestockTube').value) || 0; // 補給 (桶)
+        const restockBalls = restockTube * 12; // 轉換為顆
+        
+        const cost = selectedBall.price * count;
+        const fh = currentVenue.court * currentVenue.hr;
+        const dayIdx = new Date(dateVal).getDay();
+
+        // 1. 防呆檢查
+        const existingRec = records.find(r => r.date === dateVal && r.vName === currentVenue.name);
+        
+        const recordData = {
+            date: dateVal, vName: currentVenue.name, dayIdx,
+            fh, bName: selectedBall.name, 
+            count, cost, 
+            restock: restockBalls, 
+            timestamp: Date.now()
+        };
+
+        try {
+            if (existingRec) {
+                if (confirm(`⚠️ 警告：\n${dateVal} 的【${currentVenue.name}】已經有一筆紀錄了！\n\n要「覆蓋」掉原本的資料嗎？`)) {
+                    await updateDoc(doc(db, "records", existingRec.id), recordData);
+                    alert("✅ 資料已覆蓋更新");
+                } else {
+                    return; 
+                }
+            } else {
+                await addDoc(collection(db, "records"), recordData);
+                alert("✅ 已上傳");
+            }
+            document.getElementById('inpRestockTube').value = 0;
+        } catch(e) { alert("上傳失敗"); }
+    }
+
+    function copyToClipboard() {
+        if (!currentVenue || !selectedBall) return alert("❌ 請先選擇場地與球種");
+        const dateVal = document.getElementById('pickerDate').value;
+        const count = document.getElementById('inpCount').value;
+        const restockTube = document.getElementById('inpRestockTube').value;
+        
+        const totalCost = Math.round(selectedBall.price * count);
+        const totalFH = (currentVenue.court * currentVenue.hr);
+        const cpch = totalFH > 0 ? (count / totalFH).toFixed(2) : "0.00";
+        
+        const text = `
+🚀 曜日羽球｜${currentVenue.name}
+📅 日期：${dateVal}
+-------------------
+🏟 場地：${currentVenue.court} 面 / ${currentVenue.hr} 小時
+🏸 耗球：${count} 顆
+➕ 補給：${restockTube} 桶
+💰 總金：$${totalCost}
+📊 CPCH：${cpch}
+-------------------
+星際補給母艦 結算完畢
+`.trim();
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => { alert("✅ 已複製"); }).catch(err => alert("複製失敗"));
+        } else {
+            const textArea = document.createElement("textarea"); textArea.value = text; document.body.appendChild(textArea);
+            textArea.select(); document.execCommand("copy"); document.body.removeChild(textArea); alert("✅ 已複製");
+        }
+    }
+
+    function refreshUI() {
+        let tCost=0, tBall=0, tFH=0;
+        const grouped = {};
+
+        records.forEach(r => {
+            tCost += r.cost; tBall += r.count; tFH += r.fh;
+            if(!grouped[r.vName]) {
+                grouped[r.vName] = { 
+                    list: [], total: 0, dayIdx: r.dayIdx, 
+                    currentStock: 0, 
+                    monthly: {} 
+                };
+            }
+            
+            // 計算庫存
+            grouped[r.vName].currentStock += (r.restock || 0) - r.count;
+            r.snapshotStock = grouped[r.vName].currentStock;
+
+            grouped[r.vName].list.push(r);
+            grouped[r.vName].total += r.cost;
+
+            // 月度統計
+            const mKey = r.date.slice(0, 7); 
+            if(!grouped[r.vName].monthly[mKey]) grouped[r.vName].monthly[mKey] = { count: 0, cost: 0, fh: 0, endStock: 0 };
+            grouped[r.vName].monthly[mKey].count += r.count;
+            grouped[r.vName].monthly[mKey].cost += r.cost;
+            grouped[r.vName].monthly[mKey].fh += r.fh;
+            grouped[r.vName].monthly[mKey].endStock = grouped[r.vName].currentStock;
+        });
+
+        const container = document.getElementById('historyContainer'); container.innerHTML = '';
+        
+        Object.keys(grouped).forEach(vName => {
+            const g = grouped[vName];
+            const cls = g.dayIdx !== undefined ? `day-${g.dayIdx}` : 'day-temp';
+            
+            const reversedList = [...g.list].reverse();
+
+            let monthHtml = '';
+            Object.keys(g.monthly).sort().reverse().forEach(m => {
+                const md = g.monthly[m];
+                const m_avg = md.fh > 0 ? Math.round(md.cost / md.fh) : 0;
+                
+                // 庫存燈號邏輯
+                let stockClass = '';
+                if(md.endStock >= 24) stockClass = 'stock-safe';
+                else if(md.endStock >= 12) stockClass = 'stock-warn';
+                else stockClass = 'stock-crit';
+
+                monthHtml += `
+                    <div class="month-card">
+                        <div class="mc-header">${m}</div>
+                        <div class="mc-row"><span class="mc-label">耗球</span><span class="mc-val" style="color:var(--accent)">${md.count}</span></div>
+                        <div class="mc-row"><span class="mc-label">開銷</span><span class="mc-val">$${md.cost}</span></div>
+                        <div class="mc-row"><span class="mc-label">均/hr</span><span class="mc-val">$${m_avg}</span></div>
+                        <div class="mc-stock-box">
+                            <div class="mc-stock-label">庫存</div>
+                            <div class="mc-stock-num ${stockClass}">
+                                ${md.endStock} <span style="font-size:0.7rem; opacity:0.7;">顆</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const html = `
+                <div class="venue-group ${cls}">
+                    <div class="group-header"><span class="gh-title">${vName}</span><span>$${Math.round(g.total).toLocaleString()}</span></div>
+                    <div class="month-dashboard">${monthHtml}</div>
+                    <table>
+                        <thead><tr><th>日期</th><th>補給/耗損</th><th>健康度</th><th>$/FH</th><th>刪</th></tr></thead>
+                        <tbody>
+                            ${reversedList.map(i => {
+                                const cpch = i.fh > 0 ? (i.count/i.fh).toFixed(2) : 0;
+                                const costPerFH = i.fh > 0 ? Math.round(i.cost / i.fh) : 0;
+                                
+                                let badgeClass = '';
+                                let labelText = '';
+                                let numColor = '';
+                                
+                                if(cpch <= 2.5) { 
+                                    badgeClass = 'st-green'; labelText = '極省'; 
+                                    numColor = 'var(--st-green-text)';
+                                }
+                                else if(cpch <= 4.0) { 
+                                    badgeClass = 'st-yellow'; labelText = '正常'; 
+                                    numColor = 'var(--st-yellow-text)';
+                                }
+                                else { 
+                                    badgeClass = 'st-red'; labelText = '高損'; 
+                                    numColor = 'var(--st-red-text)';
+                                }
+                                
+                                const badgeHtml = `<span class="badge-combined ${badgeClass}">${labelText} <span style="opacity:0.3;">|</span> <span style="color:${numColor}">${cpch}</span></span>`;
+                                
+                                let stockDisplay = `<div style="font-size:0.9rem; font-weight:bold;">
+                                    <span style="color:#f87171;">-${i.count}</span>`;
+                                if(i.restock > 0) {
+                                    stockDisplay += ` <span style="color:#34d399; margin-left:5px;">+${i.restock}</span>`;
+                                }
+                                stockDisplay += `</div>`;
+
+                                return `<tr>
+                                    <td>${i.date.slice(5)}</td>
+                                    <td>${stockDisplay}</td>
+                                    <td>${badgeHtml}</td>
+                                    <td style="color:var(--text-secondary);">$${costPerFH}</td>
+                                    <td><button class="btn-del-row" onclick="delRecord('${i.id}')">×</button></td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            container.innerHTML += html;
+        });
+
+        document.getElementById('footCost').innerText = "$"+Math.round(tCost).toLocaleString();
+        document.getElementById('footBall').innerText = tBall;
+        document.getElementById('footCPCH').innerText = tFH>0 ? (tBall/tFH).toFixed(2) : "0.0";
+        document.getElementById('footAvgCost').innerText = "$" + (tFH>0 ? Math.round(tCost/tFH) : 0);
+    }
+
+    async function delRecord(id){ if(confirm("確定刪除此筆紀錄？")){ try { await deleteDoc(doc(db, "records", id)); } catch(e){ alert("刪除失敗"); } } }
+    
+    async function clearData(){ 
+        const pwd = prompt("☢️ 核彈發射程序啟動 ☢️\n\n警告：這將從雲端永久清除所有歷史資料！\n\n請輸入艦長授權密碼：");
+        if (pwd === "841275") {
+            if(confirm("⚠️ 再次確認：真的要清空嗎？")) {
+                alert("開始清空，請稍候...");
+                for(let r of records) { await deleteDoc(doc(db, "records", r.id)); }
+                alert("💥 雲端資料已清空");
+            }
+        } else if (pwd !== null) { alert("❌ 授權密碼錯誤！存取被拒"); }
+    }
+    
+    function exportData() {
+        if(records.length===0) return alert("目前無資料可匯出");
+        let csv = "\uFEFF日期,場地,球種,場時,耗球,補給(顆),庫存(顆),總金額,CPCH,每場時成本($/FH),狀態\n";
+        records.forEach(r => {
+            const cpch = r.fh>0 ? (r.count/r.fh).toFixed(2) : 0;
+            const costPerFH = r.fh>0 ? Math.round(r.cost/r.fh) : 0;
+            let st = cpch > 4 ? "過載" : (cpch >= 2.5 ? "正常" : "極省");
+            csv += `${r.date},${r.vName},${r.bName},${r.fh},${r.count},${r.restock||0},${r.snapshotStock||0},${r.cost},${cpch},${costPerFH},${st}\n`;
+        });
+        const url = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+        const a = document.createElement('a'); a.href=url; a.download=`曜日報表_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    }
+
+    async function initDefaultData() {
+        if(!confirm("確定要寫入預設班表和球種嗎？")) return;
+        const defaultScheds = [
+            { dayIndex: 1, name: '月曜南港', court: 2, hr: 2 }, { dayIndex: 1, name: '月曜中壢', court: 4, hr: 2 },
+            { dayIndex: 2, name: '火曜太平', court: 3, hr: 2 },
+            { dayIndex: 3, name: '水曜七七', court: 3, hr: 2 }, { dayIndex: 3, name: '水曜二重', court: 4, hr: 2 },
+            { dayIndex: 4, name: '木曜大同', court: 4, hr: 2 },
+            { dayIndex: 6, name: '土曜興雅', court: 11, hr: 2 },
+            { dayIndex: 0, name: '日曜中正', court: 2, hr: 2 }
+        ];
+        const defaultBalls = [ { name: '黑魔亞', price: 67 }, { name: '藍蓋', price: 75 }, { name: 'Master', price: 92 } ];
+        try {
+            for(let s of defaultScheds) await addDoc(collection(db, "schedules"), s);
+            for(let b of defaultBalls) await addDoc(collection(db, "balls"), b);
+            alert("✅ 初始化完成！");
+        } catch(e) { console.error(e); alert("初始化失敗"); }
+    }
+
+    const lastDate = localStorage.getItem('yao_last_date');
+    document.getElementById('pickerDate').value = lastDate || new Date().toISOString().split('T')[0];
+    handleDateChange();
+</script>
+</body>
+</html>
