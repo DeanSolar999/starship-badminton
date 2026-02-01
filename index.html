@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>曜日羽球團 - 星際補給母艦</title>
+    <title>曜日羽球團 - 星際補給母艦 v2.0</title>
     <style>
         :root {
             /* 深色基底 */
@@ -15,12 +15,12 @@
             --accent: #38bdf8;
             --border: #475569;
 
-            /* 七曜日光譜 (Updated) */
+            /* 七曜日光譜 */
             --d-1: #a855f7; /* Mon: 紫 */
             --d-2: #ef4444; /* Tue: 紅 */
             --d-3: #3b82f6; /* Wed: 藍 */
             --d-4: #22c55e; /* Thu: 綠 */
-            --d-5: #f59e0b; /* Fri: 金 (琥珀金) */
+            --d-5: #f59e0b; /* Fri: 金 */
             --d-6: #f97316; /* Sat: 橙 */
             --d-0: #eab308; /* Sun: 黃 */
             --d-temp: #94a3b8; /* Temp: 灰 */
@@ -226,11 +226,31 @@
         
         .action-bar { display: flex; gap: 10px; margin-top: 15px; }
         .btn-act { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-secondary); cursor: pointer; font-weight: bold; }
+        
+        /* 載入中遮罩 */
+        #loader {
+            position: fixed; top:0; left:0; right:0; bottom:0; background: var(--bg-main);
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            z-index: 2000; transition: opacity 0.5s;
+        }
+        .loader-text { margin-top: 15px; color: var(--accent); font-weight: bold; letter-spacing: 2px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        
+        .init-btn {
+            background: var(--d-3); color: white; padding: 12px; border-radius: 12px; border: none; font-size: 1rem; font-weight: bold;
+            cursor: pointer; margin-bottom: 20px; display: none; width: 100%; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+            border: 1px solid var(--accent);
+        }
     </style>
 </head>
 <body>
 
-<h1>曜日羽球｜<span>星際補給企業號</span></h1>
+<div id="loader">
+    <div style="font-size: 3rem;">🛸</div>
+    <div class="loader-text">CONNECTING TO MOTHER SHIP...</div>
+</div>
+
+<h1>曜日羽球｜<span>星際補給母艦 v2.0</span></h1>
 
 <div class="card">
     <h2>
@@ -238,6 +258,9 @@
         <span style="font-size:0.8rem; color:var(--accent); cursor:pointer;" onclick="toggleAddVenue()">＋新增場次</span>
     </h2>
     <input type="date" id="pickerDate" onchange="handleDateChange()">
+    
+    <button id="btnInitData" class="init-btn" onclick="initDefaultData()">⚡️ 初始化預設班表與球種 (僅一次)</button>
+
     <div id="dynamicVenueArea" class="venue-grid"></div>
 
     <div id="addVenueForm">
@@ -314,7 +337,7 @@
     <div id="historyContainer"></div>
     <div class="action-bar">
         <button class="btn-act" onclick="exportData()" style="color:var(--st-green-text); border-color:var(--st-green-text);">匯出報表</button>
-        <button class="btn-act btn-neon-danger" onclick="clearData()">❌ 清空資料</button>
+        <button class="btn-act btn-neon-danger" onclick="clearData()">☢️ 清空資料</button>
     </div>
 </div>
 
@@ -325,44 +348,114 @@
     <div class="hud-item hud-teal"><div class="label">$/HR</div><div class="val" id="footAvgCost">0</div></div>
 </div>
 
-<script>
-    // 預設班表
-    const defaultScheduleRaw = {
-        1: [{ id:1, name: '月曜南港', court: 2, hr: 2 }, { id:2, name: '月曜中壢', court: 4, hr: 2 }],
-        2: [{ id:3, name: '火曜太平', court: 3, hr: 2 }],
-        3: [{ id:4, name: '水曜七七', court: 3, hr: 2 }, { id:5, name: '水曜二重', court: 4, hr: 2 }],
-        4: [{ id:6, name: '木曜大同', court: 4, hr: 2 }],
-        5: [],
-        6: [{ id:7, name: '土曜興雅', court: 11, hr: 2 }],
-        0: [{ id:8, name: '日曜中正', court: 2, hr: 2 }]
+<script type="module">
+    // 引入 Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // 艦長阿錠提供的通訊密碼
+    const firebaseConfig = {
+      apiKey: "AIzaSyCol2fTV9wPfIuJThes5AivLDghIeFHwx8",
+      authDomain: "starship-badminton.firebaseapp.com",
+      projectId: "starship-badminton",
+      storageBucket: "starship-badminton.firebasestorage.app",
+      messagingSenderId: "727787756995",
+      appId: "1:727787756995:web:383e8d0a2055164135f176"
     };
 
-    let schedule = JSON.parse(localStorage.getItem('yao_schedule_v10')) || defaultScheduleRaw;
-    let balls = JSON.parse(localStorage.getItem('yao_balls_v10')) || [
-        {name:'黑魔亞', price:67}, {name:'藍蓋', price:75}, {name:'Master', price:92}
-    ];
-    let records = JSON.parse(localStorage.getItem('yao_records_v10')) || [];
+    // 初始化 Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 全域變數 (改為從 DB 同步)
+    let schedule = { 0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[] };
+    let balls = [];
+    let records = [];
     
+    // UI 變數
     let currentVenue = null; 
     let selectedBall = null;
     let isBallEditMode = false;
+    let isDbLoaded = { sched: false, ball: false, rec: false };
 
-    window.onload = function() {
-        // 嘗試讀取上次操作日期，若無則使用今天
-        const lastDate = localStorage.getItem('yao_last_date');
-        document.getElementById('pickerDate').value = lastDate || new Date().toISOString().split('T')[0];
-        
-        handleDateChange();
+    // 檢查是否載入完成
+    function checkLoader() {
+        if(isDbLoaded.sched && isDbLoaded.ball && isDbLoaded.rec) {
+            document.getElementById('loader').style.opacity = 0;
+            setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 500);
+            
+            // 如果資料庫是空的，顯示初始化按鈕
+            let totalSched = Object.values(schedule).flat().length;
+            if(totalSched === 0 && balls.length === 0) {
+                document.getElementById('btnInitData').style.display = 'block';
+            } else {
+                document.getElementById('btnInitData').style.display = 'none';
+            }
+        }
+    }
+
+    // === 即時監聽器 (Real-time Listeners) ===
+    // 1. 監聽班表
+    onSnapshot(collection(db, "schedules"), (snapshot) => {
+        schedule = { 0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[] }; // 重置
+        snapshot.forEach((doc) => {
+            const d = doc.data();
+            if(schedule[d.dayIndex]) {
+                schedule[d.dayIndex].push({ id: doc.id, ...d });
+            }
+        });
+        isDbLoaded.sched = true; checkLoader();
+        handleDateChange(); // 重新渲染介面
+    });
+
+    // 2. 監聽球種
+    onSnapshot(query(collection(db, "balls"), orderBy("price")), (snapshot) => {
+        balls = [];
+        snapshot.forEach((doc) => {
+            balls.push({ id: doc.id, ...doc.data() });
+        });
+        isDbLoaded.ball = true; checkLoader();
         renderBalls();
-        refreshUI();
-    };
+    });
 
-    // === 日期與場地邏輯 ===
+    // 3. 監聽紀錄
+    onSnapshot(query(collection(db, "records"), orderBy("date", "desc")), (snapshot) => {
+        records = [];
+        snapshot.forEach((doc) => {
+            records.push({ id: doc.id, ...doc.data() });
+        });
+        isDbLoaded.rec = true; checkLoader();
+        refreshUI();
+    });
+
+    // === 全域函式掛載 (因為 module 作用域問題) ===
+    window.handleDateChange = handleDateChange;
+    window.toggleAddVenue = toggleAddVenue;
+    window.confirmAddVenue = confirmAddVenue;
+    window.selectVenue = selectVenue;
+    window.toggleEditPanel = toggleEditPanel;
+    window.adjVenueParam = adjVenueParam;
+    window.updateFixedVenue = updateFixedVenue;
+    window.deleteFixedVenue = deleteFixedVenue;
+    window.toggleBallEdit = toggleBallEdit;
+    window.addNewBall = addNewBall;
+    window.deleteBall = deleteBall;
+    window.selectBall = selectBall;
+    window.adjCount = adjCount;
+    window.saveRecord = saveRecord;
+    window.copyToClipboard = copyToClipboard;
+    window.delRecord = delRecord;
+    window.clearData = clearData;
+    window.exportData = exportData;
+    window.updateFromSelect = () => {}; // 廢棄但保留接口防錯
+    window.initDefaultData = initDefaultData;
+
+    // === UI 邏輯 ===
+    
     function handleDateChange() {
         const dateVal = document.getElementById('pickerDate').value;
         if (!dateVal) return;
-        localStorage.setItem('yao_last_date', dateVal); // 記憶日期
-        
+        localStorage.setItem('yao_last_date', dateVal); 
         const dayIndex = new Date(dateVal).getDay(); 
         renderVenueGrid(dayIndex);
     }
@@ -395,12 +488,12 @@
 
         document.getElementById('venueAdjustPanel').style.display = 'block';
         document.getElementById('adjustTitle').innerText = currentVenue.name;
+        // 只有有 ID (來自 DB) 的才能刪除/更新
         document.getElementById('fixedVenueActions').style.display = currentVenue.id ? 'flex' : 'none';
         
         document.getElementById('adjustContent').style.display = 'none';
         document.getElementById('btnEditToggle').classList.remove('active');
 
-        // 初始化數值顯示
         updateStepperDisplay();
         document.getElementById('addVenueForm').style.display = 'none';
     }
@@ -415,17 +508,15 @@
         }
     }
 
-    // 新的 Stepper 控制邏輯
     function adjVenueParam(type, delta) {
         if(!currentVenue) return;
-        
         if(type === 'court') {
             let newVal = currentVenue.court + delta;
-            if(newVal < 1) newVal = 1; // 至少1面
+            if(newVal < 1) newVal = 1; 
             currentVenue.court = newVal;
         } else if (type === 'hr') {
             let newVal = currentVenue.hr + delta;
-            if(newVal < 0.5) newVal = 0.5; // 至少0.5小時
+            if(newVal < 0.5) newVal = 0.5; 
             currentVenue.hr = newVal;
         }
         updateStepperDisplay();
@@ -438,7 +529,6 @@
         document.getElementById('dispTotalFH').innerText = (currentVenue.court * currentVenue.hr).toFixed(1);
     }
 
-    // === 新增/刪除場地 ===
     function toggleAddVenue() {
         const form = document.getElementById('addVenueForm');
         form.style.display = form.style.display === 'none' ? 'block' : 'none';
@@ -447,7 +537,7 @@
         currentVenue = null;
     }
 
-    function confirmAddVenue() {
+    async function confirmAddVenue() {
         const name = document.getElementById('nvName').value;
         const court = parseFloat(document.getElementById('nvCourt').value);
         const hr = parseFloat(document.getElementById('nvHr').value);
@@ -457,11 +547,16 @@
         if(type === 'fixed') {
             const dateVal = document.getElementById('pickerDate').value;
             const dayIndex = new Date(dateVal).getDay();
-            if(!schedule[dayIndex]) schedule[dayIndex] = [];
-            schedule[dayIndex].push({ id: Date.now(), name, court, hr });
-            localStorage.setItem('yao_schedule_v10', JSON.stringify(schedule));
-            handleDateChange();
-            alert("已加入班表");
+            // 寫入 DB
+            try {
+                await addDoc(collection(db, "schedules"), {
+                    dayIndex, name, court, hr
+                });
+                alert("已同步至雲端班表");
+                document.getElementById('nvName').value = '';
+            } catch(e) {
+                console.error(e); alert("寫入失敗，請檢查網路或權限");
+            }
         } else {
             currentVenue = { name, court, hr, cid: 'temp' };
             document.getElementById('addVenueForm').style.display = 'none';
@@ -469,43 +564,41 @@
             document.getElementById('adjustTitle').innerText = name + " (臨時)";
             document.getElementById('fixedVenueActions').style.display = 'none';
             document.getElementById('adjustContent').style.display = 'block'; 
-            
             updateStepperDisplay();
         }
     }
 
-    function updateFixedVenue() {
+    async function updateFixedVenue() {
         if(!currentVenue.id) return;
-        const d = currentVenue.dayIndex;
-        const idx = schedule[d].findIndex(v => v.id === currentVenue.id);
-        if(idx!==-1) {
-            schedule[d][idx].court = currentVenue.court;
-            schedule[d][idx].hr = currentVenue.hr;
-            localStorage.setItem('yao_schedule_v10', JSON.stringify(schedule));
-            alert("班表更新！"); handleDateChange();
-        }
+        try {
+            const ref = doc(db, "schedules", currentVenue.id);
+            await updateDoc(ref, {
+                court: currentVenue.court,
+                hr: currentVenue.hr
+            });
+            alert("雲端班表已更新！");
+        } catch(e) { alert("更新失敗"); }
     }
 
-    function deleteFixedVenue() {
+    async function deleteFixedVenue() {
         if(!currentVenue.id) return;
-        if(!confirm(`⚠️ 確定要移除【${currentVenue.name}】的班表嗎？`)) return;
-        const d = currentVenue.dayIndex;
-        schedule[d] = schedule[d].filter(v => v.id !== currentVenue.id);
-        localStorage.setItem('yao_schedule_v10', JSON.stringify(schedule));
-        handleDateChange();
+        if(!confirm(`⚠️ 確定要從雲端移除【${currentVenue.name}】的班表嗎？`)) return;
+        try {
+            await deleteDoc(doc(db, "schedules", currentVenue.id));
+        } catch(e) { alert("刪除失敗"); }
     }
 
     // === 球種管理 ===
     function toggleBallEdit() { isBallEditMode = !isBallEditMode; renderBalls(); }
     function renderBalls() {
         const container = document.getElementById('ballArea'); container.innerHTML = '';
-        balls.forEach((b, idx) => {
+        balls.forEach((b) => {
             const btn = document.createElement('div');
             btn.className = 'ball-btn'; btn.innerText = `${b.name} $${b.price}`;
             if(isBallEditMode) {
                 const delIcon = document.createElement('div');
                 delIcon.className = 'ball-del-btn'; delIcon.innerText = '×';
-                delIcon.onclick = (e) => { e.stopPropagation(); deleteBall(idx); };
+                delIcon.onclick = (e) => { e.stopPropagation(); deleteBall(b.id); };
                 btn.appendChild(delIcon); btn.style.borderColor = 'var(--neon-red)';
             } else { btn.onclick = () => selectBall(b, btn); }
             container.appendChild(btn);
@@ -514,16 +607,46 @@
         addBtn.className = 'ball-btn'; addBtn.style.border = '1px dashed #94a3b8'; addBtn.innerText = '＋ 新增';
         addBtn.onclick = addNewBall; container.appendChild(addBtn);
     }
-    function addNewBall() {
+    
+    async function addNewBall() {
         const name = prompt("名稱:"); if(!name) return;
         const price = prompt("單價:"); if(!price) return;
-        balls.push({name, price:parseFloat(price)}); localStorage.setItem('yao_balls_v10', JSON.stringify(balls)); renderBalls();
+        try {
+            await addDoc(collection(db, "balls"), {
+                name, price: parseFloat(price)
+            });
+        } catch(e) { alert("新增失敗"); }
     }
-    function deleteBall(idx) { if(!confirm("刪除此球種？")) return; balls.splice(idx, 1); localStorage.setItem('yao_balls_v10', JSON.stringify(balls)); renderBalls(); }
+    
+    async function deleteBall(id) { 
+        if(!confirm("從雲端刪除此球種？")) return;
+        try { await deleteDoc(doc(db, "balls", id)); } catch(e){ alert("刪除失敗"); }
+    }
+    
     function selectBall(b, el) { selectedBall = b; document.querySelectorAll('.ball-btn').forEach(btn => btn.classList.remove('active')); el.classList.add('active'); }
     function adjCount(n) { const el = document.getElementById('inpCount'); el.value = Math.max(0, (parseInt(el.value)||0) + n); }
 
-    // === 複製功能 (Line) ===
+    // === 紀錄與存檔 ===
+    async function saveRecord() {
+        if (!currentVenue) return alert("❌ 請選擇場地");
+        if (!selectedBall) return alert("❌ 請選擇球種");
+        
+        const dateVal = document.getElementById('pickerDate').value;
+        const count = parseFloat(document.getElementById('inpCount').value) || 0;
+        const cost = selectedBall.price * count;
+        const fh = currentVenue.court * currentVenue.hr;
+        const dayIdx = new Date(dateVal).getDay();
+
+        try {
+            await addDoc(collection(db, "records"), {
+                date: dateVal, vName: currentVenue.name, dayIdx,
+                fh, bName: selectedBall.name, count, cost,
+                timestamp: Date.now()
+            });
+            alert("✅ 已上傳至星際雲端");
+        } catch(e) { alert("上傳失敗"); console.error(e); }
+    }
+
     function copyToClipboard() {
         if (!currentVenue || !selectedBall) return alert("❌ 請先選擇場地與球種");
         
@@ -547,54 +670,21 @@
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(() => {
-                alert("✅ 已複製結算文字！可直接貼上 Line");
-            }).catch(err => {
-                console.error("複製失敗:", err);
-                alert("複製失敗，請手動複製");
-            });
+                alert("✅ 已複製");
+            }).catch(err => alert("複製失敗"));
         } else {
-            // Fallback for older browsers
             const textArea = document.createElement("textarea");
             textArea.value = text;
             document.body.appendChild(textArea);
             textArea.select();
             document.execCommand("copy");
             document.body.removeChild(textArea);
-            alert("✅ 已複製結算文字！");
+            alert("✅ 已複製");
         }
-    }
-
-    // === 存檔 ===
-    function saveRecord() {
-        if (!currentVenue) return alert("❌ 請選擇場地");
-        if (!selectedBall) return alert("❌ 請選擇球種");
-        
-        const dateVal = document.getElementById('pickerDate').value;
-        const count = parseFloat(document.getElementById('inpCount').value) || 0;
-        const cost = selectedBall.price * count;
-        const fh = currentVenue.court * currentVenue.hr;
-        const dayIdx = new Date(dateVal).getDay();
-
-        const record = {
-            id: Date.now(), date: dateVal, vName: currentVenue.name, dayIdx: dayIdx,
-            fh: fh, bName: selectedBall.name, count: count, cost: cost
-        };
-
-        const existIdx = records.findIndex(r => r.date === dateVal && r.vName === currentVenue.name);
-        if(existIdx !== -1) {
-            if(!confirm("⚠️ 同日期同場地已有紀錄，確定要覆蓋嗎？")) return;
-            records[existIdx] = { ...record, id: records[existIdx].id };
-        } else { records.push(record); }
-
-        localStorage.setItem('yao_records_v10', JSON.stringify(records));
-        refreshUI(); alert("✅ 存檔成功");
     }
 
     // === 歷史與報表 ===
     function refreshUI() {
-        // 歷史紀錄按日期排序 (新到舊)
-        records.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
         let tCost=0, tBall=0, tFH=0;
         const grouped = {};
 
@@ -655,12 +745,13 @@
                                 if(cpch > 4.0){ b='st-red'; t='過載'; } 
                                 else if(cpch >= 2.5){ b='st-yellow'; t='正常'; }
                                 
+                                // ID 是字串，所以加引號
                                 return `<tr>
                                     <td>${i.date.slice(5)}</td>
                                     <td>${i.count}</td>
                                     <td><span class="badge ${b}">${t} ${cpch}</span></td>
                                     <td style="color:var(--text-secondary);">$${costPerFH}</td>
-                                    <td><button class="btn-del-row" onclick="delRecord(${i.id})">×</button></td>
+                                    <td><button class="btn-del-row" onclick="delRecord('${i.id}')">×</button></td>
                                 </tr>`;
                             }).join('')}
                         </tbody>
@@ -675,23 +766,24 @@
         document.getElementById('footAvgCost').innerText = "$" + (tFH>0 ? Math.round(tCost/tFH) : 0);
     }
 
-    function delRecord(id){ 
+    async function delRecord(id){ 
         if(confirm("確定刪除此筆紀錄？")){ 
-            records=records.filter(r=>r.id!==id); 
-            localStorage.setItem('yao_records_v10',JSON.stringify(records)); 
-            refreshUI(); 
+            try { await deleteDoc(doc(db, "records", id)); } catch(e){ alert("刪除失敗"); }
         } 
     }
     
-    // === 密碼保護清空功能 ===
-    function clearData(){ 
-        const pwd = prompt("☢️ 核彈發射程序啟動 ☢️\n\n警告：這將永久清除所有歷史資料！\n\n請輸入艦長授權密碼以執行：");
+    async function clearData(){ 
+        const pwd = prompt("☢️ 核彈發射程序啟動 ☢️\n\n警告：這將從雲端永久清除所有歷史資料！\n\n請輸入艦長授權密碼：");
         
         if (pwd === "841275") {
-            records = []; 
-            localStorage.setItem('yao_records_v10', JSON.stringify(records)); 
-            refreshUI(); 
-            alert("💥 系統資料已完全格式化");
+            // 安全起見，逐筆刪除 (因為測試模式不一定能用 batch delete)
+            if(confirm("⚠️ 再次確認：真的要清空嗎？")) {
+                alert("開始清空，請稍候...");
+                for(let r of records) {
+                   await deleteDoc(doc(db, "records", r.id));
+                }
+                alert("💥 雲端資料已清空");
+            }
         } else if (pwd !== null) {
             alert("❌ 授權密碼錯誤！存取被拒");
         }
@@ -709,6 +801,41 @@
         const url = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
         const a = document.createElement('a'); a.href=url; a.download=`曜日報表_${new Date().toISOString().slice(0,10)}.csv`; a.click();
     }
+
+    // === 初始化預設資料 (One-time) ===
+    async function initDefaultData() {
+        if(!confirm("確定要寫入預設班表和球種嗎？")) return;
+        
+        const defaultScheds = [
+            { dayIndex: 1, name: '月曜南港', court: 2, hr: 2 }, 
+            { dayIndex: 1, name: '月曜中壢', court: 4, hr: 2 },
+            { dayIndex: 2, name: '火曜太平', court: 3, hr: 2 },
+            { dayIndex: 3, name: '水曜七七', court: 3, hr: 2 }, 
+            { dayIndex: 3, name: '水曜二重', court: 4, hr: 2 },
+            { dayIndex: 4, name: '木曜大同', court: 4, hr: 2 },
+            { dayIndex: 6, name: '土曜興雅', court: 11, hr: 2 },
+            { dayIndex: 0, name: '日曜中正', court: 2, hr: 2 }
+        ];
+        const defaultBalls = [
+            { name: '黑魔亞', price: 67 }, 
+            { name: '藍蓋', price: 75 }, 
+            { name: 'Master', price: 92 }
+        ];
+
+        try {
+            for(let s of defaultScheds) await addDoc(collection(db, "schedules"), s);
+            for(let b of defaultBalls) await addDoc(collection(db, "balls"), b);
+            alert("✅ 初始化完成！請享受雲端版。");
+        } catch(e) {
+            console.error(e); alert("初始化失敗");
+        }
+    }
+
+    // 初始化日期
+    const lastDate = localStorage.getItem('yao_last_date');
+    document.getElementById('pickerDate').value = lastDate || new Date().toISOString().split('T')[0];
+    handleDateChange();
+
 </script>
 </body>
 </html>
