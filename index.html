@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>曜日羽球團 - 星際補給母艦 v3.2</title>
+    <title>曜日羽球團 - 後勤補給企業號 v3.4</title>
     <style>
         /* --- 1. 核心變數 --- */
         :root {
@@ -12,7 +12,7 @@
             --accent: #38bdf8; --border: #475569;
             --d-1: #a855f7; --d-2: #ef4444; --d-3: #3b82f6; --d-4: #22c55e;
             --d-5: #f59e0b; --d-6: #f97316; --d-0: #eab308; --d-temp: #94a3b8;
-            --neon-red: #ff1744;
+            --neon-red: #ff1744; --neon-red-glow: rgba(255, 23, 68, 0.35); --neon-red-bg: rgba(255, 23, 68, 0.1);
             --st-green-bg: rgba(16, 185, 129, 0.15); --st-green-text: #34d399; 
             --st-yellow-bg: rgba(245, 158, 11, 0.15); --st-yellow-text: #fbbf24;
             --st-red-bg: rgba(239, 68, 68, 0.15);    --st-red-text: #f87171;
@@ -21,7 +21,7 @@
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-main); color: var(--text-primary);
-            margin: 0; padding: 10px; padding-bottom: 120px; /* 縮小邊距 */
+            margin: 0; padding: 10px; padding-bottom: 120px;
         }
 
         /* --- 2. 響應式佈局 --- */
@@ -95,7 +95,10 @@
         .stock-panel { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }
         .stock-row { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 8px; padding: 6px; border-radius: 8px; background: rgba(255,255,255,0.03); }
         .stock-row.main { background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); } 
-        .stock-label { font-size: 0.85rem; color: var(--text-secondary); text-align: right; padding-right: 4px; font-weight: bold; }
+        
+        .stock-label-multi { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; font-size: 0.8rem; color: var(--text-secondary); text-align: right; padding-right: 4px; font-weight: bold; line-height: 1.1; }
+        .stock-label { font-size: 0.8rem; color: var(--text-secondary); text-align: right; padding-right: 4px; font-weight: bold; }
+
         .num-control { display: flex; align-items: center; gap: 4px; width: 100%; }
         .num-btn { width: 36px; height: 36px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: white; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .num-btn:active { background: var(--accent); color: var(--bg-main); }
@@ -105,7 +108,7 @@
         .btn-save { flex: 2; padding: 14px; background: var(--accent); color: #0f172a; border: none; border-radius: 10px; font-size: 1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
         .btn-copy { flex: 1; padding: 14px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
 
-        /* --- 戰情卡片 (核心修改) --- */
+        /* --- 戰情卡片 --- */
         .venue-group { margin-top: 20px; background: var(--bg-main); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); border-left-width: 5px; }
         .group-header { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-input); }
         .gh-title { font-size: 1rem; font-weight: 800; }
@@ -119,39 +122,21 @@
         .day-0 { border-left-color: var(--d-0); } .day-0 .gh-title { color: var(--d-0); }
         .day-temp { border-left-color: var(--d-temp); } .day-temp .gh-title { color: var(--d-temp); }
 
-        /* 月度戰情卡 (緊湊版) */
-        .month-dashboard { 
-            display: flex; gap: 5px; padding: 8px 5px; /* 縮小 gap 和 padding */
-            overflow-x: auto; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border);
-        }
-        .month-card { 
-            flex: 0 0 32%; /* 強制佔用 32% 寬度，一排剛好三個 */
-            max-width: 33%;
-            background: rgba(255,255,255,0.03); 
-            border: 1px solid var(--border); border-radius: 8px; padding: 6px; 
-            display: flex; flex-direction: column; gap: 2px; /* 縮小行距 */
-            border-top: 2px solid transparent; 
-        }
-        .day-1 .month-card { border-top-color: var(--d-1); } .day-2 .month-card { border-top-color: var(--d-2); } 
-        .day-3 .month-card { border-top-color: var(--d-3); } .day-4 .month-card { border-top-color: var(--d-4); } 
-        .day-5 .month-card { border-top-color: var(--d-5); } .day-6 .month-card { border-top-color: var(--d-6); } 
-        .day-0 .month-card { border-top-color: var(--d-0); }
+        .month-dashboard { display: flex; gap: 5px; padding: 8px 5px; overflow-x: auto; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); }
+        .month-card { flex: 0 0 32%; max-width: 33%; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 2px; border-top: 2px solid transparent; }
+        .day-1 .month-card { border-top-color: var(--d-1); } .day-2 .month-card { border-top-color: var(--d-2); } .day-3 .month-card { border-top-color: var(--d-3); }
+        .day-4 .month-card { border-top-color: var(--d-4); } .day-5 .month-card { border-top-color: var(--d-5); } .day-6 .month-card { border-top-color: var(--d-6); } .day-0 .month-card { border-top-color: var(--d-0); }
         
         .mc-header { font-size: 0.75rem; font-weight: bold; color: var(--text-primary); border-bottom: 1px dashed var(--border); padding-bottom: 3px; margin-bottom: 3px; text-align: center; }
         .mc-row { display: flex; justify-content: space-between; font-size: 0.65rem; } .mc-label { color: var(--text-secondary); } .mc-val { font-weight: bold; color: var(--text-primary); }
         
-        /* 極簡庫存顯示 (New) */
-        .mc-stock-box {
-            margin-top: 4px; padding: 2px; border-radius: 6px; text-align: center;
-            background: rgba(0,0,0,0.2); 
-        }
-        .mc-stock-label { font-size: 0.6rem; color: var(--text-secondary); margin-bottom: 0px; letter-spacing: 0.5px; opacity: 0.8; }
-        .mc-stock-num { font-size: 1.1rem; font-weight: 800; font-family: monospace; line-height: 1.1; }
+        /* 庫存直式標示 */
+        .mc-stock-box { margin-top: 6px; padding: 4px; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .mc-stock-label { writing-mode: vertical-rl; text-orientation: upright; font-size: 0.6rem; color: var(--text-secondary); letter-spacing: 2px; margin: 0; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 3px; }
+        .mc-stock-num { font-size: 1.4rem; font-weight: 800; font-family: monospace; line-height: 1; position: relative; flex: 1; text-align: center; }
+        .mc-stock-unit { font-size: 0.55rem; position: absolute; bottom: 0; right: -2px; opacity: 0.6; font-weight: normal; }
         
-        /* 庫存顏色 */
-        .stock-safe { color: #4ade80; } 
-        .stock-warn { color: #facc15; } 
-        .stock-crit { color: #f87171; text-shadow: 0 0 5px rgba(248, 113, 113, 0.4); }
+        .stock-safe { color: #4ade80; } .stock-warn { color: #facc15; } .stock-crit { color: #f87171; text-shadow: 0 0 5px rgba(248, 113, 113, 0.4); }
 
         /* 表格與 Badge */
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
@@ -188,7 +173,7 @@
     <div class="loader-text">CONNECTING TO MOTHER SHIP...</div>
 </div>
 
-<h1>曜日羽球｜<span>星際補給母艦 v3.2</span></h1>
+<h1>曜日羽球｜<span>後勤補給企業號 v3.4</span></h1>
 
 <div class="dashboard-container">
 
@@ -242,7 +227,7 @@
 
         <div class="stock-panel">
             <div class="stock-row main">
-                <div class="stock-label">🔥本場  消耗</div>
+                <div class="stock-label-multi"><span>🔥 本場</span><span>消耗</span></div>
                 <div class="num-control">
                     <button class="num-btn" onclick="adjVal('inpCount', -1)">-</button>
                     <input type="number" id="inpCount" class="num-input" value="12">
@@ -250,7 +235,7 @@
                 </div>
             </div>
             <div class="stock-row">
-                <div class="stock-label" style="color:#4ade80;">➕補充(桶)</div>
+                <div class="stock-label" style="color:#4ade80;">➕ 補充 (桶)</div>
                 <div class="num-control">
                     <button class="num-btn" onclick="adjVal('inpRestockTube', -1)">-</button>
                     <input type="number" id="inpRestockTube" class="num-input" value="0">
@@ -307,6 +292,7 @@
     let selectedBall = null;
     let isBallEditMode = false;
     let isDbLoaded = { sched: false, ball: false, rec: false };
+    let venueLastStock = {}; // 全域變數：儲存各場地最新庫存
 
     function checkLoader() {
         if(isDbLoaded.sched && isDbLoaded.ball && isDbLoaded.rec) {
@@ -531,12 +517,16 @@
     function copyToClipboard() {
         if (!currentVenue || !selectedBall) return alert("❌ 請先選擇場地與球種");
         const dateVal = document.getElementById('pickerDate').value;
-        const count = document.getElementById('inpCount').value;
-        const restockTube = document.getElementById('inpRestockTube').value;
+        const count = parseFloat(document.getElementById('inpCount').value) || 0;
+        const restockTube = parseFloat(document.getElementById('inpRestockTube').value) || 0;
         
         const totalCost = Math.round(selectedBall.price * count);
         const totalFH = (currentVenue.court * currentVenue.hr);
         const cpch = totalFH > 0 ? (count / totalFH).toFixed(2) : "0.00";
+        
+        // 計算即時庫存 (Previous Stock + Restock - Count)
+        const previousStock = venueLastStock[currentVenue.name] || 0;
+        const estimatedStock = previousStock + (restockTube * 12) - count;
         
         const text = `
 🚀 曜日羽球｜${currentVenue.name}
@@ -545,6 +535,7 @@
 🏟 場地：${currentVenue.court} 面 / ${currentVenue.hr} 小時
 🏸 耗球：${count} 顆
 ➕ 補給：${restockTube} 桶
+📦 結餘：${estimatedStock} 顆
 💰 總金：$${totalCost}
 📊 CPCH：${cpch}
 -------------------
@@ -562,6 +553,7 @@
     function refreshUI() {
         let tCost=0, tBall=0, tFH=0;
         const grouped = {};
+        venueLastStock = {}; // 重置全域庫存紀錄
 
         records.forEach(r => {
             tCost += r.cost; tBall += r.count; tFH += r.fh;
@@ -576,6 +568,9 @@
             // 計算庫存
             grouped[r.vName].currentStock += (r.restock || 0) - r.count;
             r.snapshotStock = grouped[r.vName].currentStock;
+            
+            // 更新全域變數 (因為 records 是按時間排序，最後一筆就是最新庫存)
+            venueLastStock[r.vName] = grouped[r.vName].currentStock;
 
             grouped[r.vName].list.push(r);
             grouped[r.vName].total += r.cost;
@@ -602,7 +597,6 @@
                 const md = g.monthly[m];
                 const m_avg = md.fh > 0 ? Math.round(md.cost / md.fh) : 0;
                 
-                // 庫存燈號邏輯
                 let stockClass = '';
                 if(md.endStock >= 24) stockClass = 'stock-safe';
                 else if(md.endStock >= 12) stockClass = 'stock-warn';
@@ -617,7 +611,8 @@
                         <div class="mc-stock-box">
                             <div class="mc-stock-label">庫存</div>
                             <div class="mc-stock-num ${stockClass}">
-                                ${md.endStock} <span style="font-size:0.7rem; opacity:0.7;">顆</span>
+                                ${md.endStock}
+                                <span class="mc-stock-unit">顆</span>
                             </div>
                         </div>
                     </div>
