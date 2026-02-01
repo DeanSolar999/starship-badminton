@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>曜日羽球團 - 星際補給母艦</title>
+    <style>
+        :root {
+            /* 深色基底 */
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --border: #475569;
+
+            /* 七曜日光譜 (Updated) */
+            --d-1: #a855f7; /* Mon: 紫 */
+            --d-2: #ef4444; /* Tue: 紅 */
+            --d-3: #3b82f6; /* Wed: 藍 */
+            --d-4: #22c55e; /* Thu: 綠 */
+            --d-5: #f59e0b; /* Fri: 金 (琥珀金) */
+            --d-6: #f97316; /* Sat: 橙 */
+            --d-0: #eab308; /* Sun: 黃 */
+            --d-temp: #94a3b8; /* Temp: 灰 */
+
+            /* 霓虹紅 (Danger Red) */
+            --neon-red: #ff1744;
+            --neon-red-glow: rgba(255, 23, 68, 0.35);
+            --neon-red-bg: rgba(255, 23, 68, 0.1);
+
+            /* 狀態燈 */
+            --st-green-bg: rgba(16, 185, 129, 0.2); --st-green-text: #34d399;
+            --st-yellow-bg: rgba(245, 158, 11, 0.2); --st-yellow-text: #fbbf24;
+            --st-red-bg: rgba(239, 68, 68, 0.2);    --st-red-text: #f87171;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-main); color: var(--text-primary);
+            margin: 0; padding: 15px; padding-bottom: 140px;
+        }
+
+        h1 { text-align: center; margin-bottom: 20px; font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; color: var(--text-primary); }
+        h1 span { color: var(--accent); text-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+
+        .card { 
+            background: var(--bg-card); border-radius: 16px; padding: 18px; 
+            margin-bottom: 20px; border: 1px solid var(--border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        h2 { 
+            font-size: 1rem; margin: 0 0 15px 0; color: var(--text-secondary); 
+            font-weight: 600; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border); padding-bottom: 8px;
+        }
+
+        /* 日期顯示 */
+        input[type="date"] {
+            width: 100%; padding: 12px; background: var(--bg-input); 
+            border: 1px solid var(--border); border-radius: 10px; 
+            color: white; font-size: 1rem; color-scheme: dark; outline: none;
+            font-weight: bold;
+        }
+
+        /* 場地按鈕 */
+        .venue-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .venue-btn { 
+            background: var(--bg-main); border: 1px solid var(--border);
+            padding: 15px 5px; border-radius: 12px; cursor: pointer; text-align: center; color: var(--text-secondary);
+            transition: 0.2s; position: relative; overflow: hidden;
+            border-left-width: 5px; 
+        }
+        .venue-btn strong { display: block; font-size: 1rem; margin-bottom: 4px; color: var(--text-primary); }
+        .venue-btn span { font-size: 0.75rem; opacity: 0.7; }
+        .venue-btn.active { background: var(--bg-input); box-shadow: inset 0 0 15px rgba(0,0,0,0.5); border-color: var(--accent); border-left-width: 5px; }
+        .venue-btn.active strong { color: var(--accent); }
+
+        /* 曜日顏色 */
+        .day-1 { border-left-color: var(--d-1); } .day-1.active { border-color: var(--d-1); color: var(--d-1); }
+        .day-2 { border-left-color: var(--d-2); } .day-2.active { border-color: var(--d-2); color: var(--d-2); }
+        .day-3 { border-left-color: var(--d-3); } .day-3.active { border-color: var(--d-3); color: var(--d-3); }
+        .day-4 { border-left-color: var(--d-4); } .day-4.active { border-color: var(--d-4); color: var(--d-4); }
+        .day-5 { border-left-color: var(--d-5); } .day-5.active { border-color: var(--d-5); color: var(--d-5); }
+        .day-6 { border-left-color: var(--d-6); } .day-6.active { border-color: var(--d-6); color: var(--d-6); }
+        .day-0 { border-left-color: var(--d-0); } .day-0.active { border-color: var(--d-0); color: var(--d-0); }
+        .day-temp { border-left-color: var(--d-temp); }
+
+        /* 微調面板 */
+        #venueAdjustPanel, #addVenueForm { margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--border); display: none; }
+        #addVenueForm { background: var(--bg-input); }
+        .adjust-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .adjust-title { font-weight: bold; color: var(--accent); font-size: 1.1rem; }
+        .btn-toggle-edit { 
+            background: transparent; border: 1px solid var(--text-secondary); color: var(--text-secondary);
+            padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s;
+        }
+        .btn-toggle-edit.active { background: var(--bg-input); color: var(--accent); border-color: var(--accent); }
+        #adjustContent { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); }
+        
+        /* 數值調整器 (Stepper) */
+        .adjust-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .stepper-group { display: flex; align-items: center; gap: 8px; background: var(--bg-input); padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
+        .step-btn { 
+            width: 36px; height: 36px; background: var(--bg-card); border: none; color: white; 
+            border-radius: 8px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
+            transition: 0.1s;
+        }
+        .step-btn:active { background: var(--accent); color: var(--bg-main); }
+        .step-val { width: 60px; text-align: center; font-size: 1.1rem; font-weight: bold; font-family: monospace; color: var(--accent); }
+
+        .manage-actions { display: flex; gap: 8px; margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border); }
+        .btn-action { flex: 1; padding: 10px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; border: none; font-weight: bold; }
+        .btn-update { background: rgba(16, 185, 129, 0.2); color: var(--st-green-text); border: 1px solid var(--st-green-text); }
+        .form-input { width: 100%; padding: 10px; margin-bottom: 10px; background: var(--bg-main); border: 1px solid var(--border); color: white; border-radius: 8px; }
+
+        /* 霓虹紅按鈕樣式 */
+        .btn-neon-danger {
+            background: var(--neon-red-bg);
+            border: 1px solid var(--neon-red);
+            color: var(--neon-red);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 5px var(--neon-red-bg), inset 0 0 5px var(--neon-red-bg);
+            text-shadow: 0 0 2px var(--neon-red-glow);
+        }
+        .btn-neon-danger:active { transform: scale(0.96); box-shadow: 0 0 2px var(--neon-red-glow); }
+
+        /* 球種 */
+        .ball-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .ball-btn { background: var(--bg-main); border: 1px solid var(--border); color: var(--text-secondary); padding: 14px; text-align: center; cursor: pointer; border-radius: 12px; position: relative; transition: 0.2s; }
+        .ball-btn.active { background: var(--bg-input); color: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px rgba(56, 189, 248, 0.15); }
+        .ball-del-btn { position: absolute; top: -5px; right: -5px; width: 22px; height: 22px; background: var(--neon-red); color: white; border-radius: 50%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; z-index: 2; border: 2px solid var(--bg-card); }
+        .edit-toggle { font-size: 0.8rem; color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+        .input-row { display: flex; align-items: center; gap: 10px; margin-top: 20px; background: var(--bg-main); padding: 10px; border-radius: 12px; border: 1px solid var(--border); }
+        input[type="number"] { flex: 1; padding: 10px; border: none; background: transparent; font-size: 1.3rem; text-align: center; color: white; outline: none; }
+        .adj-btn { width: 40px; height: 40px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: white; cursor: pointer; font-size: 1.2rem; }
+        
+        /* 動作按鈕群 */
+        .save-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-save { flex: 2; padding: 16px; background: var(--accent); color: #0f172a; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-copy { flex: 1; padding: 16px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 14px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+
+        /* 歷史區塊 */
+        .venue-group { 
+            margin-top: 25px; background: var(--bg-main); 
+            border-radius: 14px; overflow: hidden; 
+            border: 1px solid var(--border); 
+            border-left-width: 6px; 
+        }
+        .group-header { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-input); }
+        .gh-title { font-size: 1.1rem; font-weight: 800; }
+        
+        /* 曜日顏色連動 */
+        .day-1 { border-left-color: var(--d-1); } .day-1 .gh-title { color: var(--d-1); }
+        .day-2 { border-left-color: var(--d-2); } .day-2 .gh-title { color: var(--d-2); }
+        .day-3 { border-left-color: var(--d-3); } .day-3 .gh-title { color: var(--d-3); }
+        .day-4 { border-left-color: var(--d-4); } .day-4 .gh-title { color: var(--d-4); }
+        .day-5 { border-left-color: var(--d-5); } .day-5 .gh-title { color: var(--d-5); }
+        .day-6 { border-left-color: var(--d-6); } .day-6 .gh-title { color: var(--d-6); }
+        .day-0 { border-left-color: var(--d-0); } .day-0 .gh-title { color: var(--d-0); }
+        .day-temp { border-left-color: var(--d-temp); } .day-temp .gh-title { color: var(--d-temp); }
+
+        /* 月度戰情卡片 */
+        .month-dashboard {
+            display: flex; gap: 10px; padding: 10px; overflow-x: auto;
+            background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border);
+        }
+        .month-card {
+            min-width: 130px; background: rgba(255,255,255,0.03); 
+            border: 1px solid var(--border); border-radius: 10px; padding: 10px;
+            display: flex; flex-direction: column; gap: 4px;
+            border-top: 3px solid transparent; 
+        }
+        /* 月卡配色連動 */
+        .day-1 .month-card { border-top-color: var(--d-1); }
+        .day-2 .month-card { border-top-color: var(--d-2); }
+        .day-3 .month-card { border-top-color: var(--d-3); }
+        .day-4 .month-card { border-top-color: var(--d-4); }
+        .day-5 .month-card { border-top-color: var(--d-5); }
+        .day-6 .month-card { border-top-color: var(--d-6); }
+        .day-0 .month-card { border-top-color: var(--d-0); }
+
+        .mc-header { font-size: 0.85rem; font-weight: bold; color: var(--text-primary); border-bottom: 1px dashed var(--border); padding-bottom: 5px; margin-bottom: 5px; text-align: center; }
+        .mc-row { display: flex; justify-content: space-between; font-size: 0.75rem; }
+        .mc-label { color: var(--text-secondary); }
+        .mc-val { font-weight: bold; color: var(--text-primary); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th { text-align: center; padding: 10px 5px; color: var(--text-secondary); border-bottom: 1px solid var(--border); font-size: 0.75rem; }
+        td { padding: 12px 5px; border-bottom: 1px solid var(--border); color: var(--text-primary); text-align: center; }
+        
+        .badge { padding: 3px 6px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; display: inline-block; white-space: nowrap; }
+        .st-green { background: var(--st-green-bg); color: var(--st-green-text); }
+        .st-yellow { background: var(--st-yellow-bg); color: var(--st-yellow-text); }
+        .st-red { background: var(--st-red-bg); color: var(--st-red-text); }
+
+        .btn-del-row { background: transparent; color: var(--st-red-text); border: 1px solid var(--st-red-text); border-radius: 4px; padding: 2px 8px; font-size: 0.7rem; cursor: pointer; }
+
+        /* HUD */
+        .summary-bar { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border);
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+            padding: 10px; z-index: 999;
+        }
+        .hud-item { border-radius: 8px; padding: 6px 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+        .hud-blue { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); } .hud-blue .val { color: #60a5fa; }
+        .hud-orange { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); } .hud-orange .val { color: #fbbf24; }
+        .hud-purple { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); } .hud-purple .val { color: #c084fc; }
+        .hud-teal { background: rgba(20, 184, 166, 0.15); border: 1px solid rgba(20, 184, 166, 0.3); } .hud-teal .val { color: #2dd4bf; }
+
+        .label { font-size: 0.6rem; color: rgba(255,255,255,0.6); margin-bottom: 2px; }
+        .val { font-size: 0.9rem; font-weight: 800; font-family: monospace; }
+        
+        .action-bar { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-act { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-secondary); cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<h1>曜日羽球｜<span>星際補給企業號</span></h1>
+
+<div class="card">
+    <h2>
+        1. 選擇或管理場地
+        <span style="font-size:0.8rem; color:var(--accent); cursor:pointer;" onclick="toggleAddVenue()">＋新增場次</span>
+    </h2>
+    <input type="date" id="pickerDate" onchange="handleDateChange()">
+    <div id="dynamicVenueArea" class="venue-grid"></div>
+
+    <div id="addVenueForm">
+        <div style="display:flex; gap:15px; margin-bottom:10px; font-size:0.9rem;">
+            <label><input type="radio" name="vType" value="temp" checked> 臨時加開</label>
+            <label><input type="radio" name="vType" value="fixed"> 固定班表</label>
+        </div>
+        <input type="text" id="nvName" class="form-input" placeholder="場地名稱 (如: 外調比賽)">
+        <div style="display:flex; gap:10px;">
+            <input type="number" id="nvCourt" class="form-input" placeholder="面數" value="1">
+            <input type="number" id="nvHr" class="form-input" placeholder="時數" value="2">
+        </div>
+        <button class="btn-save" style="margin-top:0; padding:10px; width:100%;" onclick="confirmAddVenue()">確定加入</button>
+    </div>
+
+    <div id="venueAdjustPanel">
+        <div class="adjust-header">
+            <span id="adjustTitle" class="adjust-title"></span>
+            <button id="btnEditToggle" class="btn-toggle-edit" onclick="toggleEditPanel()">⚙️ 調整規格</button>
+        </div>
+        
+        <div id="adjustContent">
+            <div class="adjust-row">
+                <span>面數 (Court)</span>
+                <div class="stepper-group">
+                    <button class="step-btn" onclick="adjVenueParam('court', -1)">-</button>
+                    <span id="dispCourt" class="step-val">0</span>
+                    <button class="step-btn" onclick="adjVenueParam('court', 1)">+</button>
+                </div>
+            </div>
+
+            <div class="adjust-row">
+                <span>時數 (Hour)</span>
+                <div class="stepper-group">
+                    <button class="step-btn" onclick="adjVenueParam('hr', -0.5)">-</button>
+                    <span id="dispHr" class="step-val">0</span>
+                    <button class="step-btn" onclick="adjVenueParam('hr', 0.5)">+</button>
+                </div>
+            </div>
+
+            <div style="text-align:right; font-size:0.85rem; color:var(--text-secondary); margin-top:5px;">
+                總場時 (面×時): <span id="dispTotalFH" style="color:var(--text-primary); font-weight:bold;">0</span>
+            </div>
+            
+            <div id="fixedVenueActions" class="manage-actions" style="display:none;">
+                <button class="btn-action btn-update" onclick="updateFixedVenue()">💾 更新預設</button>
+                <button class="btn-action btn-neon-danger" onclick="deleteFixedVenue()">🗑 移除班表</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>
+        2. 球種消耗
+        <span class="edit-toggle" onclick="toggleBallEdit()">編輯模式</span>
+    </h2>
+    <div id="ballArea" class="ball-grid"></div>
+
+    <div class="input-row">
+        <button class="adj-btn" onclick="adjCount(-1)">-</button>
+        <input type="number" id="inpCount" value="12">
+        <button class="adj-btn" onclick="adjCount(1)">+</button>
+    </div>
+    
+    <div class="save-actions">
+        <button class="btn-copy" onclick="copyToClipboard()">📋 複製結算</button>
+        <button class="btn-save" onclick="saveRecord()">📥 存入紀錄</button>
+    </div>
+</div>
+
+<div class="card">
+    <h2>3. 歷史紀錄 (月度戰情)</h2>
+    <div id="historyContainer"></div>
+    <div class="action-bar">
+        <button class="btn-act" onclick="exportData()" style="color:var(--st-green-text); border-color:var(--st-green-text);">匯出報表</button>
+        <button class="btn-act btn-neon-danger" onclick="clearData()">❌ 清空資料</button>
+    </div>
+</div>
+
+<div class="summary-bar">
+    <div class="hud-item hud-blue"><div class="label">總成本</div><div class="val" id="footCost">$0</div></div>
+    <div class="hud-item hud-orange"><div class="label">總耗球</div><div class="val" id="footBall">0</div></div>
+    <div class="hud-item hud-purple"><div class="label">CPCH</div><div class="val" id="footCPCH">0.0</div></div>
+    <div class="hud-item hud-teal"><div class="label">$/HR</div><div class="val" id="footAvgCost">0</div></div>
+</div>
+
+<script>
+    // 預設班表
+    const defaultScheduleRaw = {
+        1: [{ id:1, name: '月曜南港', court: 2, hr: 2 }, { id:2, name: '月曜中壢', court: 4, hr: 2 }],
+        2: [{ id:3, name: '火曜太平', court: 3, hr: 2 }],
+        3: [{ id:4, name: '水曜七七', court: 3, hr: 2 }, { id:5, name: '水曜二重', court: 4, hr: 2 }],
+        4: [{ id:6, name: '木曜大同', court: 4, hr: 2 }],
+        5: [],
+        6: [{ id:7, name: '土曜興雅', court: 11, hr: 2 }],
+        0: [{ id:8, name: '日曜中正', court: 2, hr: 2 }]
+    };
+
+    let schedule = JSON.parse(localStorage.getItem('yao_schedule_v10')) || defaultScheduleRaw;
+    let balls = JSON.parse(localStorage.getItem('yao_balls_v10')) || [
+        {name:'黑魔亞', price:67}, {name:'藍蓋', price:75}, {name:'Master', price:92}
+    ];
+    let records = JSON.parse(localStorage.getItem('yao_records_v10')) || [];
+    
+    let currentVenue = null; 
+    let selectedBall = null;
+    let isBallEditMode = false;
+
+    window.onload = function() {
+        // 嘗試讀取上次操作日期，若無則使用今天
+        const lastDate = localStorage.getItem('yao_last_date');
+        document.getElementById('pickerDate').value = lastDate || new Date().toISOString().split('T')[0];
+        
+        handleDateChange();
+        renderBalls();
+        refreshUI();
+    };
+
+    // === 日期與場地邏輯 ===
+    function handleDateChange() {
+        const dateVal = document.getElementById('pickerDate').value;
+        if (!dateVal) return;
+        localStorage.setItem('yao_last_date', dateVal); // 記憶日期
+        
+        const dayIndex = new Date(dateVal).getDay(); 
+        renderVenueGrid(dayIndex);
+    }
+
+    function renderVenueGrid(dayIndex) {
+        const container = document.getElementById('dynamicVenueArea');
+        container.innerHTML = '';
+        currentVenue = null;
+        document.getElementById('venueAdjustPanel').style.display = 'none';
+        document.getElementById('addVenueForm').style.display = 'none';
+
+        const venues = schedule[dayIndex] || [];
+        if (venues.length > 0) {
+            venues.forEach(v => {
+                const btn = document.createElement('div');
+                btn.className = `venue-btn day-${dayIndex}`;
+                btn.innerHTML = `<strong>${v.name}</strong><span>${v.court}面 / ${v.hr}hr</span>`;
+                btn.onclick = () => selectVenue(v, btn, dayIndex);
+                container.appendChild(btn);
+            });
+        } else {
+            container.innerHTML = `<div style="grid-column:span 2; text-align:center; color:var(--text-secondary); padding:10px;">本日無固定班表</div>`;
+        }
+    }
+
+    function selectVenue(v, el, dayIndex) {
+        currentVenue = { ...v, dayIndex: dayIndex }; 
+        document.querySelectorAll('.venue-btn').forEach(b => b.classList.remove('active'));
+        if(el) el.classList.add('active');
+
+        document.getElementById('venueAdjustPanel').style.display = 'block';
+        document.getElementById('adjustTitle').innerText = currentVenue.name;
+        document.getElementById('fixedVenueActions').style.display = currentVenue.id ? 'flex' : 'none';
+        
+        document.getElementById('adjustContent').style.display = 'none';
+        document.getElementById('btnEditToggle').classList.remove('active');
+
+        // 初始化數值顯示
+        updateStepperDisplay();
+        document.getElementById('addVenueForm').style.display = 'none';
+    }
+
+    function toggleEditPanel() {
+        const content = document.getElementById('adjustContent');
+        const btn = document.getElementById('btnEditToggle');
+        if(content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block'; btn.classList.add('active');
+        } else {
+            content.style.display = 'none'; btn.classList.remove('active');
+        }
+    }
+
+    // 新的 Stepper 控制邏輯
+    function adjVenueParam(type, delta) {
+        if(!currentVenue) return;
+        
+        if(type === 'court') {
+            let newVal = currentVenue.court + delta;
+            if(newVal < 1) newVal = 1; // 至少1面
+            currentVenue.court = newVal;
+        } else if (type === 'hr') {
+            let newVal = currentVenue.hr + delta;
+            if(newVal < 0.5) newVal = 0.5; // 至少0.5小時
+            currentVenue.hr = newVal;
+        }
+        updateStepperDisplay();
+    }
+
+    function updateStepperDisplay() {
+        if(!currentVenue) return;
+        document.getElementById('dispCourt').innerText = currentVenue.court;
+        document.getElementById('dispHr').innerText = currentVenue.hr;
+        document.getElementById('dispTotalFH').innerText = (currentVenue.court * currentVenue.hr).toFixed(1);
+    }
+
+    // === 新增/刪除場地 ===
+    function toggleAddVenue() {
+        const form = document.getElementById('addVenueForm');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        document.getElementById('venueAdjustPanel').style.display = 'none';
+        document.querySelectorAll('.venue-btn').forEach(b => b.classList.remove('active'));
+        currentVenue = null;
+    }
+
+    function confirmAddVenue() {
+        const name = document.getElementById('nvName').value;
+        const court = parseFloat(document.getElementById('nvCourt').value);
+        const hr = parseFloat(document.getElementById('nvHr').value);
+        const type = document.querySelector('input[name="vType"]:checked').value;
+        if(!name) return alert("請輸入名稱");
+
+        if(type === 'fixed') {
+            const dateVal = document.getElementById('pickerDate').value;
+            const dayIndex = new Date(dateVal).getDay();
+            if(!schedule[dayIndex]) schedule[dayIndex] = [];
+            schedule[dayIndex].push({ id: Date.now(), name, court, hr });
+            localStorage.setItem('yao_schedule_v10', JSON.stringify(schedule));
+            handleDateChange();
+            alert("已加入班表");
+        } else {
+            currentVenue = { name, court, hr, cid: 'temp' };
+            document.getElementById('addVenueForm').style.display = 'none';
+            document.getElementById('venueAdjustPanel').style.display = 'block';
+            document.getElementById('adjustTitle').innerText = name + " (臨時)";
+            document.getElementById('fixedVenueActions').style.display = 'none';
+            document.getElementById('adjustContent').style.display = 'block'; 
+            
+            updateStepperDisplay();
+        }
+    }
+
+    function updateFixedVenue() {
+        if(!currentVenue.id) return;
+        const d = currentVenue.dayIndex;
+        const idx = schedule[d].findIndex(v => v.id === currentVenue.id);
+        if(idx!==-1) {
+            schedule[d][idx].court = currentVenue.court;
+            schedule[d][idx].hr = currentVenue.hr;
+            localStorage.setItem('yao_schedule_v10', JSON.stringify(schedule));
+            alert("班表更新！"); handleDateChange();
+        }
+    }
+
+    function deleteFixedVenue() {
+        if(!currentVenue.id) return;
+        if(!confirm(`⚠️ 確定要移除【${currentVenue.name}】的班表嗎？`)) return;
+        const d = currentVenue.dayIndex;
+        schedule[d] = schedule[d].filter(v => v.id !== currentVenue.id);
+        localStorage.setItem('yao_schedule_v10', JSON.stringify(schedule));
+        handleDateChange();
+    }
+
+    // === 球種管理 ===
+    function toggleBallEdit() { isBallEditMode = !isBallEditMode; renderBalls(); }
+    function renderBalls() {
+        const container = document.getElementById('ballArea'); container.innerHTML = '';
+        balls.forEach((b, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'ball-btn'; btn.innerText = `${b.name} $${b.price}`;
+            if(isBallEditMode) {
+                const delIcon = document.createElement('div');
+                delIcon.className = 'ball-del-btn'; delIcon.innerText = '×';
+                delIcon.onclick = (e) => { e.stopPropagation(); deleteBall(idx); };
+                btn.appendChild(delIcon); btn.style.borderColor = 'var(--neon-red)';
+            } else { btn.onclick = () => selectBall(b, btn); }
+            container.appendChild(btn);
+        });
+        const addBtn = document.createElement('div');
+        addBtn.className = 'ball-btn'; addBtn.style.border = '1px dashed #94a3b8'; addBtn.innerText = '＋ 新增';
+        addBtn.onclick = addNewBall; container.appendChild(addBtn);
+    }
+    function addNewBall() {
+        const name = prompt("名稱:"); if(!name) return;
+        const price = prompt("單價:"); if(!price) return;
+        balls.push({name, price:parseFloat(price)}); localStorage.setItem('yao_balls_v10', JSON.stringify(balls)); renderBalls();
+    }
+    function deleteBall(idx) { if(!confirm("刪除此球種？")) return; balls.splice(idx, 1); localStorage.setItem('yao_balls_v10', JSON.stringify(balls)); renderBalls(); }
+    function selectBall(b, el) { selectedBall = b; document.querySelectorAll('.ball-btn').forEach(btn => btn.classList.remove('active')); el.classList.add('active'); }
+    function adjCount(n) { const el = document.getElementById('inpCount'); el.value = Math.max(0, (parseInt(el.value)||0) + n); }
+
+    // === 複製功能 (Line) ===
+    function copyToClipboard() {
+        if (!currentVenue || !selectedBall) return alert("❌ 請先選擇場地與球種");
+        
+        const dateVal = document.getElementById('pickerDate').value;
+        const count = document.getElementById('inpCount').value;
+        const totalCost = Math.round(selectedBall.price * count);
+        const totalFH = (currentVenue.court * currentVenue.hr);
+        const cpch = totalFH > 0 ? (count / totalFH).toFixed(2) : "0.00";
+        
+        const text = `
+🚀 曜日羽球｜${currentVenue.name}
+📅 日期：${dateVal}
+-------------------
+🏟 場地：${currentVenue.court} 面 / ${currentVenue.hr} 小時
+🏸 耗球：${count} 顆 (${selectedBall.name})
+💰 總金：$${totalCost}
+📊 CPCH：${cpch}
+-------------------
+星際補給母艦 結算完畢
+`.trim();
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("✅ 已複製結算文字！可直接貼上 Line");
+            }).catch(err => {
+                console.error("複製失敗:", err);
+                alert("複製失敗，請手動複製");
+            });
+        } else {
+            // Fallback for older browsers
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+            alert("✅ 已複製結算文字！");
+        }
+    }
+
+    // === 存檔 ===
+    function saveRecord() {
+        if (!currentVenue) return alert("❌ 請選擇場地");
+        if (!selectedBall) return alert("❌ 請選擇球種");
+        
+        const dateVal = document.getElementById('pickerDate').value;
+        const count = parseFloat(document.getElementById('inpCount').value) || 0;
+        const cost = selectedBall.price * count;
+        const fh = currentVenue.court * currentVenue.hr;
+        const dayIdx = new Date(dateVal).getDay();
+
+        const record = {
+            id: Date.now(), date: dateVal, vName: currentVenue.name, dayIdx: dayIdx,
+            fh: fh, bName: selectedBall.name, count: count, cost: cost
+        };
+
+        const existIdx = records.findIndex(r => r.date === dateVal && r.vName === currentVenue.name);
+        if(existIdx !== -1) {
+            if(!confirm("⚠️ 同日期同場地已有紀錄，確定要覆蓋嗎？")) return;
+            records[existIdx] = { ...record, id: records[existIdx].id };
+        } else { records.push(record); }
+
+        localStorage.setItem('yao_records_v10', JSON.stringify(records));
+        refreshUI(); alert("✅ 存檔成功");
+    }
+
+    // === 歷史與報表 ===
+    function refreshUI() {
+        // 歷史紀錄按日期排序 (新到舊)
+        records.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        let tCost=0, tBall=0, tFH=0;
+        const grouped = {};
+
+        records.forEach(r => {
+            tCost += r.cost; tBall += r.count; tFH += r.fh;
+            if(!grouped[r.vName]) {
+                grouped[r.vName] = { list: [], total: 0, dayIdx: r.dayIdx, monthly: {} };
+            }
+            grouped[r.vName].list.push(r);
+            grouped[r.vName].total += r.cost;
+
+            const mKey = r.date.slice(0, 7); 
+            if(!grouped[r.vName].monthly[mKey]) grouped[r.vName].monthly[mKey] = { count: 0, cost: 0, fh: 0 };
+            grouped[r.vName].monthly[mKey].count += r.count;
+            grouped[r.vName].monthly[mKey].cost += r.cost;
+            grouped[r.vName].monthly[mKey].fh += r.fh;
+        });
+
+        const container = document.getElementById('historyContainer');
+        container.innerHTML = '';
+        
+        Object.keys(grouped).forEach(vName => {
+            const g = grouped[vName];
+            const cls = g.dayIdx !== undefined ? `day-${g.dayIdx}` : 'day-temp';
+            
+            // 月度卡片：排序並反轉
+            let monthHtml = '';
+            Object.keys(g.monthly).sort().reverse().forEach(m => {
+                const md = g.monthly[m];
+                const m_avg = md.fh > 0 ? Math.round(md.cost / md.fh) : 0;
+                monthHtml += `
+                    <div class="month-card">
+                        <div class="mc-header">${m}</div>
+                        <div class="mc-row"><span class="mc-label">耗球</span><span class="mc-val" style="color:var(--accent)">${md.count}</span></div>
+                        <div class="mc-row"><span class="mc-label">開銷</span><span class="mc-val">$${md.cost}</span></div>
+                        <div class="mc-row"><span class="mc-label">均/hr</span><span class="mc-val">$${m_avg}</span></div>
+                    </div>
+                `;
+            });
+
+            const html = `
+                <div class="venue-group ${cls}">
+                    <div class="group-header">
+                        <span class="gh-title">${vName}</span>
+                        <span>$${Math.round(g.total).toLocaleString()}</span>
+                    </div>
+                    
+                    <div class="month-dashboard">${monthHtml}</div>
+
+                    <table>
+                        <thead><tr><th>日期</th><th>耗球</th><th>CPCH</th><th>$/FH</th><th>刪</th></tr></thead>
+                        <tbody>
+                            ${g.list.map(i => {
+                                const cpch = i.fh > 0 ? (i.count/i.fh).toFixed(2) : 0;
+                                const costPerFH = i.fh > 0 ? Math.round(i.cost / i.fh) : 0;
+                                
+                                let b = 'st-green', t='極省';
+                                if(cpch > 4.0){ b='st-red'; t='過載'; } 
+                                else if(cpch >= 2.5){ b='st-yellow'; t='正常'; }
+                                
+                                return `<tr>
+                                    <td>${i.date.slice(5)}</td>
+                                    <td>${i.count}</td>
+                                    <td><span class="badge ${b}">${t} ${cpch}</span></td>
+                                    <td style="color:var(--text-secondary);">$${costPerFH}</td>
+                                    <td><button class="btn-del-row" onclick="delRecord(${i.id})">×</button></td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            container.innerHTML += html;
+        });
+
+        document.getElementById('footCost').innerText = "$"+Math.round(tCost).toLocaleString();
+        document.getElementById('footBall').innerText = tBall;
+        document.getElementById('footCPCH').innerText = tFH>0 ? (tBall/tFH).toFixed(2) : "0.0";
+        document.getElementById('footAvgCost').innerText = "$" + (tFH>0 ? Math.round(tCost/tFH) : 0);
+    }
+
+    function delRecord(id){ 
+        if(confirm("確定刪除此筆紀錄？")){ 
+            records=records.filter(r=>r.id!==id); 
+            localStorage.setItem('yao_records_v10',JSON.stringify(records)); 
+            refreshUI(); 
+        } 
+    }
+    
+    // === 密碼保護清空功能 ===
+    function clearData(){ 
+        const pwd = prompt("☢️ 核彈發射程序啟動 ☢️\n\n警告：這將永久清除所有歷史資料！\n\n請輸入艦長授權密碼以執行：");
+        
+        if (pwd === "841275") {
+            records = []; 
+            localStorage.setItem('yao_records_v10', JSON.stringify(records)); 
+            refreshUI(); 
+            alert("💥 系統資料已完全格式化");
+        } else if (pwd !== null) {
+            alert("❌ 授權密碼錯誤！存取被拒");
+        }
+    }
+    
+    function exportData() {
+        if(records.length===0) return alert("目前無資料可匯出");
+        let csv = "\uFEFF日期,場地,球種,場時,耗球,總金額,CPCH,每場時成本($/FH),狀態\n";
+        records.forEach(r => {
+            const cpch = r.fh>0 ? (r.count/r.fh).toFixed(2) : 0;
+            const costPerFH = r.fh>0 ? Math.round(r.cost/r.fh) : 0;
+            let st = cpch > 4 ? "過載" : (cpch >= 2.5 ? "正常" : "極省");
+            csv += `${r.date},${r.vName},${r.bName},${r.fh},${r.count},${r.cost},${cpch},${costPerFH},${st}\n`;
+        });
+        const url = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+        const a = document.createElement('a'); a.href=url; a.download=`曜日報表_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    }
+</script>
+</body>
+</html>
