@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>曜日羽球團 - 星際補給母艦 v3.10</title>
+    <title>曜日羽球團 - 星際補給母艦 v3.12</title>
     <style>
         /* --- 1. 核心變數 --- */
         :root {
@@ -21,7 +21,8 @@
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-main); color: var(--text-primary);
-            margin: 0; padding: 10px; padding-bottom: 140px; 
+            margin: 0; padding: 10px; 
+            padding-bottom: 140px; /* 手機版底部空間 */
         }
 
         /* --- 2. 響應式佈局 --- */
@@ -62,12 +63,12 @@
             table tr:hover td { background: rgba(255,255,255,0.05); }
             .venue-btn:hover, .ball-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 
-            /* 🔥 v3.10 電腦版表格欄位優化：改為百分比，自動延伸 */
-            table th:nth-child(1) { width: 80px !important; }  /* 日期：稍微加寬 */
-            table th:nth-child(2) { width: auto !important; }  /* 補給/耗損：佔用剩餘 */
-            table th:nth-child(3) { width: 22% !important; }   /* 健康度：佔 22% */
-            table th:nth-child(4) { width: 15% !important; }   /* 成本：佔 15% */
-            table th:nth-child(5) { width: 50px !important; }  /* 刪除：固定 */
+            /* 電腦版表格欄位優化 */
+            table th:nth-child(1) { width: 80px !important; }  /* 日期 */
+            table th:nth-child(2) { width: auto !important; }  /* 耗損/補給 */
+            table th:nth-child(3) { width: 22% !important; }   /* 健康度 */
+            table th:nth-child(4) { width: 15% !important; }   /* 成本 */
+            table th:nth-child(5) { width: 50px !important; }  /* 刪除 */
         }
 
         /* --- 3. 元件優化 --- */
@@ -161,7 +162,7 @@
         th { text-align: center; padding: 8px 4px; color: var(--text-secondary); border-bottom: 1px solid var(--border); font-size: 0.7rem; font-weight: normal; }
         td { padding: 10px 4px; border-bottom: 1px solid var(--border); color: var(--text-primary); text-align: center; vertical-align: middle; }
         
-        /* 🔥 v3.10 手機版寬度 (預設) */
+        /* 手機版欄寬 */
         th:nth-child(1) { width: 50px; } 
         th:nth-child(2) { width: auto; } 
         th:nth-child(3) { width: 75px; } 
@@ -221,7 +222,7 @@
     <div class="loader-text">CONNECTING TO MOTHER SHIP...</div>
 </div>
 
-<h1>曜日羽球｜<span>星際補給母艦 v3.10</span></h1>
+<h1>曜日羽球｜<span>星際補給母艦 v3.12</span></h1>
 
 <div class="dashboard-container">
 
@@ -681,7 +682,7 @@
                     <div class="group-header"><span class="gh-title">${vName}</span><span>$${Math.round(g.total).toLocaleString()}</span></div>
                     <div class="month-dashboard">${monthHtml}</div>
                     <table>
-                        <thead><tr><th>日期</th><th>補給/耗損</th><th>健康度</th><th>$/FH</th><th>刪</th></tr></thead>
+                        <thead><tr><th>日期</th><th>耗損/補給</th><th>健康度</th><th>$/FH</th><th>刪</th></tr></thead>
                         <tbody>
                             ${reversedList.map(i => {
                                 const cpch = i.fh > 0 ? (i.count/i.fh).toFixed(2) : 0;
@@ -736,6 +737,13 @@
     
     function exportData() {
         if(records.length===0) return alert("目前無資料可匯出");
+        
+        // v3.12 新增：匯出密碼鎖
+        const pwd = prompt("🔒 請輸入艦長授權密碼以匯出報表：");
+        if (pwd !== "841275") {
+            return alert("❌ 密碼錯誤！無法匯出");
+        }
+
         let csv = "\uFEFF日期,場地,球種,場時,耗球,補給(顆),庫存(顆),總金額,CPCH,每場時成本($/FH),狀態\n";
         records.forEach(r => {
             const cpch = r.fh>0 ? (r.count/r.fh).toFixed(2) : 0;
