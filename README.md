@@ -37,25 +37,7 @@
 
 HUD 懸浮戰情列：底部懸浮顯示總成本、總耗球、平均 CPCH 與 每小時成本 ($/HR)。
 
-🛠️ 安裝與部署 (Deployment)
-若要重新部署或更新系統，請確保資料夾內包含以下 4 個檔案：
 
-index.html：核心程式碼 (包含 v3.10 所有 UI、邏輯與 Firebase 連線)。
-
-manifest.json：PWA 身分證 (定義 App 名稱、圖示，讓手機可以安裝)。
-
-service-worker.js：離線快取引擎 (加快開啟速度)。
-
-icon-192.png：App 圖示 (建議 192x192 像素)。
-
-推薦部署方式： 使用 Netlify Drop (拖曳上傳即可) 或 GitHub Pages (需支援 HTTPS 才能啟用 PWA)。
-
-⚠️ 安全與權限警告 (Security Notice)
-目前系統運作於 Firebase Test Mode (測試模式)：
-
-時效性：資料庫權限將在專案建立後的 30 天 自動過期鎖定（屆時需更新 Firestore Rules 或切換為 Google Auth）。
-
-權限：目前採用前端密碼 (841275) 進行簡易防護（僅針對「清空全部資料」功能），建議未來升級為 Firebase Authentication。
 
 🕹️ 操作指南
 設定場地：首次使用請點擊「⚡️ 初始化」寫入預設班表，或手動「＋新增場次」。
