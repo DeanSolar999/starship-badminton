@@ -1,105 +1,79 @@
-🏸 曜日羽球團｜星際補給母艦 (Interstellar Supply Mothership)
-系統版本：v2.0 (Neon Red Update)
+🚀 曜日羽球團｜星際補給母艦 (Starship Supply Mothership)
+版本：v3.10 (桌面優化完全體)
 
-代號：Starship-HUD
+類型：PWA (Progressive Web App) 單頁式應用
 
-核心用途：羽球團務戰術分析、耗材控管、場地調度
+核心引擎：HTML5, CSS3, Vanilla JS, Firebase Firestore
 
-🚀 系統簡介
-「星際補給母艦」是一套專為 曜日羽球團 打造的單頁式（Single-Page）輕量級管理系統。 本系統屏除繁雜的後端資料庫，採用瀏覽器本地核心（localStorage）進行資料封存。透過直觀的「七曜日光譜」視覺引導與「戰情室 HUD」數據面板，讓指揮官（管理者）能即時掌握每一場戰役（球敘）的成本與球損效率（CPCH）。
+📖 系統簡介
+這是一個專為羽球團務設計的「後勤戰情室」。不同於一般的記帳軟體，本系統專注於 「物資流 (球)」 與 「場地效能 (CPCH)」 的即時運算。 v3.10 版本特別針對 電腦寬螢幕 進行了深度優化，同時保留了手機版的極致操作效率。
 
-🛡️ 核心模組 (Core Modules)
-1. 🌈 七曜日光譜系統 (Day-of-Week Spectrum)
-系統依據 ISO-8601 週曆邏輯，為每一天分配專屬的戰術識別色：
+✨ v3.10 核心特色 (Key Features)
+1. 響應式雙重佈局 (Dual Layout)
+📱 手機模式：直式單欄流動，操作區塊緊湊，歷史紀錄表格欄位鎖定寬度，確保不跑版。
 
-月曜 (Mon)：🟦 藍色光譜
+💻 戰情室模式 (Desktop)：
 
-火曜 (Tue)：🔵 青色光譜
+雙欄並排：左側控場地，右側控物資。
 
-水曜 (Wed)：🟪 紫色光譜
+彈性表格：歷史紀錄欄位採用 百分比寬度 (耗損 40% / 健康度 22% / 成本 15%)，視窗拉寬時自動延伸，視野更舒適。
 
-...以此類推至 日曜 (Sun) 的黃色光譜。
+底部視野防護：大幅增加底部 Padding (250px)，防止懸浮 HUD 遮擋最後幾筆資料。
 
-視覺化班表，自動判讀日期並切換對應色系，防止排程混亂。
+2. 戰術控制台 (Dashboard)
+膠囊式日期選擇器：精緻化置中設計，節省空間並提升美感。
 
-2. 📊 CPCH 戰損監控 (Consumption Per Court Hour)
-獨家研發的 CPCH 演算法，精準計算「每面場地每小時耗球數」。
+防呆覆蓋機制：若同一天、同一場地重複輸入，系統會攔截並詢問是否「覆蓋」舊資料，防止手誤產生多筆垃圾數據。
 
-🟢 極省 (Safe)：CPCH < 2.5 (數值優異)
+3. 彈藥庫管理 (Inventory)
+雙軌輸入：支援「耗損 (顆)」與「補給 (桶)」同時輸入，系統自動換算 (1桶 = 12顆)。
 
-🟡 正常 (Normal)：2.5 ≤ CPCH ≤ 4.0
+庫存流水帳：系統自動根據歷史紀錄，推算每個場地當下的「結餘庫存」。
 
-🔴 過載 (Overload)：CPCH > 4.0 (需注意球損或球種品質)
+直式儀表板：月度卡片中的庫存改為「直式標籤 + 大數字」，並附帶安全燈號 (🟢 安全 / 🟡 警戒 / 🔴 危急)。
 
-3. 🛸 指揮官級 UI 介面
-深色模式 (Dark Mode)：基於 #0f172a 深空藍底色，適合夜間球場操作，保護視力並節省裝置電力。
+4. 數據分析 (Analytics)
+品牌軍火條 (Brand Ticker)：HUD 上方新增橫向捲動列，自動計算各品牌球種的 累計 CPCH，一眼看出哪種球最耐打。
 
-HUD 抬頭顯示器：底部常駐戰情條，即時計算總成本、總耗球與平均時薪成本。
-
-霓虹防誤觸機制：v2.0 新增 Neon Danger Red 刪除按鍵，採用半透明紅光暈設計，提供高質感的警示效果。
-
-4. 💾 離線黑盒子 (Offline Storage)
-資料自動存入瀏覽器 localStorage。
-
-即使關閉分頁或重開機，歷史戰報依然存在。
-
-支援 CSV 戰報匯出，可將資料傳輸至 Excel 進行深度分析。
+HUD 懸浮戰情列：底部懸浮顯示總成本、總耗球、平均 CPCH 與 每小時成本 ($/HR)。
 
 🛠️ 安裝與部署 (Deployment)
-本系統採 Zero-Dependency (零依賴) 設計，無需 Node.js、Python 或資料庫。
+若要重新部署或更新系統，請確保資料夾內包含以下 4 個檔案：
 
-下載：將原始碼存為 badminton_ship.html。
+index.html：核心程式碼 (包含 v3.10 所有 UI、邏輯與 Firebase 連線)。
 
-啟動：直接使用 Chrome / Safari / Edge 瀏覽器開啟該檔案。
+manifest.json：PWA 身分證 (定義 App 名稱、圖示，讓手機可以安裝)。
 
-行動端優化：
+service-worker.js：離線快取引擎 (加快開啟速度)。
 
-iOS: 在 Safari 點擊「分享」→「加入主畫面」。
+icon-192.png：App 圖示 (建議 192x192 像素)。
 
-Android: 在 Chrome 點擊設定 →「加到主畫面」。
+推薦部署方式： 使用 Netlify Drop (拖曳上傳即可) 或 GitHub Pages (需支援 HTTPS 才能啟用 PWA)。
 
-系統將以全螢幕 Web App 模式運行，體驗如原生應用程式。
+⚠️ 安全與權限警告 (Security Notice)
+目前系統運作於 Firebase Test Mode (測試模式)：
 
-📖 操作手冊 (Manual)
-新增場次
-點擊 「＋新增場次」。
+時效性：資料庫權限將在專案建立後的 30 天 自動過期鎖定（屆時需更新 Firestore Rules 或切換為 Google Auth）。
 
-選擇 「臨時加開」 (單次) 或 「固定班表」 (永久記錄於該星期)。
+權限：目前採用前端密碼 (841275) 進行簡易防護（僅針對「清空全部資料」功能），建議未來升級為 Firebase Authentication。
 
-輸入場地名稱（如：月曜南港）、面數與時數。
+🕹️ 操作指南
+設定場地：首次使用請點擊「⚡️ 初始化」寫入預設班表，或手動「＋新增場次」。
 
-記錄消耗
-在日曆選擇日期。
+紀錄當日：
 
-點選上方出現的場地卡片。
+選取日期與場地。
 
-選擇使用的球種（如：黑魔亞、Master）。
+點選球種 (如：黑魔亞)。
 
-輸入使用桶數/顆數，點擊 「存入紀錄」。
+輸入 「🔥 本場消耗」 (例如 12 顆)。
 
-刪除紀錄
-在歷史紀錄表格中，點擊最右側的 <span style="color:#f87171; background:rgba(248,113,113,0.15); padding:2px 6px; border-radius:4px; border:1px solid rgba(248,113,113,0.4)">×</span> 按鈕。
+若有拆新球，輸入 「➕ 補充」 (例如 2 桶)。
 
-系統會彈出確認視窗，確認後即執行銷毀。
+存檔：點擊「📥 存入紀錄」。(若重複會詢問是否覆蓋)
 
-⚙️ 技術規格 (Tech Stack)
-Structure: Semantic HTML5
+結算：點擊「📋 複製結算」，將包含 「預估結餘」 的報表貼到球團群組。
 
-Style: CSS3 Variables (Root), Flexbox, Grid Layout, Backdrop Filter
+電腦查帳：在電腦上打開，享受寬螢幕的戰情室視野，滑動下方表格檢視詳細數據。
 
-Logic: Vanilla JavaScript (ES6+)
-
-Persistence: Web Storage API (localStorage)
-
-🔄 更新日誌 (Changelog)
-v2.0 - Neon Update
-✅ UI 優化：全面導入「指揮官系統」風格。
-
-✅ 互動升級：刪除按鈕 (Delete Button) 改為 Neon Danger Red 配色，增加 Hover 發光特效與半透明邊框。
-
-✅ 體驗改善：調整按鈕觸控區域大小，適配移動端操作。
-
-v1.0 - Initial Launch
-✅ 基礎場地管理、球種計價、CPCH 計算、CSV 匯出功能上線。
-
-System Status: All Systems Go 🟢 由 曜日羽球團 負責人維護
+艦長，星際補給母艦 v3.10 系統運作正常，所有推進器準備就緒！ 🏸🚀
