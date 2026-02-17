@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>曜日羽球團 - 星際補給母艦 v4.2</title>
+    <title>曜日羽球團 - 星際補給母艦 v4.3</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -62,12 +62,10 @@
 
         h1 { 
             text-align: center; font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; color: var(--text-primary); 
-            margin: 0; /* 移除預設邊距 */
-            /* 手機版：標題往下移一點，避免被上方資訊列擋住 */
-            padding-top: 40px; 
+            margin: 0; 
+            padding-top: 40px; /* 手機版：標題往下移，避開頭像 */
         }
         h1 span { color: var(--accent); text-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
-        /* 版本號字體變小 */
         .version-tag { font-size: 0.8rem; opacity: 0.8; }
 
         /* 使用者資訊列：絕對定位在右上角 */
@@ -80,20 +78,19 @@
         }
         .user-avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; }
 
-        /* 電腦版 (寬度大於 768px)：水平排列，資訊列放回正常位置 */
+        /* 電腦版 (寬度大於 768px) */
         @media (min-width: 768px) {
             .header-container {
-                flex-direction: row; /* 改為水平排列 */
+                flex-direction: row; 
                 justify-content: space-between;
                 align-items: center;
                 padding-top: 0;
             }
             h1 { 
-                padding-top: 0; /* 移除手機版的 padding */
-                text-align: left; /* 標題靠左 */
-                font-size: 1.6rem; /* 電腦版標題稍微大一點 */
+                padding-top: 0; 
+                text-align: left; 
+                font-size: 1.6rem; 
             }
-            /* 資訊列不再絕對定位，回到正常的排版流中 */
             .user-info {
                 position: static; 
                 background: rgba(0,0,0,0.2);
@@ -240,7 +237,7 @@
 
         .badge-combined { padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; min-width: 60px; }
         .st-green { background: var(--st-green-bg); color: var(--st-green-text); border: 1px solid rgba(52, 211, 153, 0.3); }
-        .st-yellow { background: var(--st-yellow-bg); color: var(--st-yellow-text); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .st-yellow { background: var(--st-yellow-bg); color: var(--st-yellow-text); border: 1px solid rgba(251, 191, 36, 0.3); }
         .st-red { background: var(--st-red-bg); color: var(--st-red-text); border: 1px solid rgba(248, 113, 113, 0.3); }
         .btn-del-row { background: transparent; color: var(--st-red-text); border: 1px solid var(--st-red-text); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; }
 
@@ -285,7 +282,7 @@
 </div>
 
 <div class="header-container">
-    <h1>曜日羽球｜<span>星際補給母艦</span> <span class="version-tag">v4.2</span></h1>
+    <h1>曜日羽球｜<span>星際補給母艦</span> <span class="version-tag">v4.3</span></h1>
     
     <div class="user-info" id="userInfo" onclick="logout()" style="display:none;">
         <span id="userName">艦長</span>
@@ -855,15 +852,24 @@
     async function delRecord(id){ if(confirm("確定刪除此筆紀錄？")){ try { await deleteDoc(doc(db, "records", id)); } catch(e){ alert("刪除失敗"); } } }
     
     async function clearData(){ 
-        if(confirm("☢️ 警告！您即將刪除雲端所有資料！\n\n此動作無法復原，確定要執行嗎？")) {
-            alert("正在清空資料庫...");
-            for(let r of records) { await deleteDoc(doc(db, "records", r.id)); }
-            alert("資料已清空！");
-        }
+        const pwd = prompt("☢️ 核彈發射程序啟動 ☢️\n\n警告：這將從雲端永久清除所有歷史資料！\n\n請輸入艦長授權密碼：");
+        if (pwd === "681101") {
+            if(confirm("⚠️ 再次確認：真的要清空嗎？")) {
+                alert("開始清空，請稍候...");
+                for(let r of records) { await deleteDoc(doc(db, "records", r.id)); }
+                alert("💥 雲端資料已清空");
+            }
+        } else if (pwd !== null) { alert("❌ 授權密碼錯誤！存取被拒"); }
     }
     
     function exportData() {
         if(records.length===0) return alert("目前無資料可匯出");
+        
+        const pwd = prompt("🔒 請輸入艦長授權密碼以匯出報表：");
+        if (pwd !== "681101") {
+            return alert("❌ 密碼錯誤！無法匯出");
+        }
+
         let csv = "\uFEFF日期,場地,球種,場時,耗球,補給(顆),庫存(顆),總金額,CPCH,每場時成本($/FH),狀態\n";
         records.forEach(r => {
             const cpch = r.fh>0 ? (r.count/r.fh).toFixed(2) : 0;
