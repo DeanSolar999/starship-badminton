@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>曜日羽球團 - 星際補給母艦 v4.0</title>
+    <title>曜日羽球團 - 星際補給母艦 v4.1</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -29,7 +29,7 @@
             margin: 0; padding: 10px; padding-bottom: 140px; 
         }
 
-        /* --- 2. 登入介面 (Auth Overlay) --- */
+        /* --- 2. 登入介面 --- */
         #authOverlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(15, 23, 42, 0.98); z-index: 3000;
@@ -49,15 +49,30 @@
         }
         .btn-google:active { transform: scale(0.96); }
         
-        /* 使用者資訊列 */
+        /* --- 3. 響應式使用者資訊列 (修正重疊問題) --- */
         .user-info { 
-            position: absolute; top: 15px; right: 15px; font-size: 0.8rem; color: var(--accent); 
-            display: flex; align-items: center; gap: 8px; cursor: pointer; z-index: 100;
-            background: rgba(0,0,0,0.3); padding: 4px 8px 4px 12px; border-radius: 50px; border: 1px solid var(--border);
+            position: absolute; top: 10px; right: 10px; 
+            display: flex; align-items: center; 
+            cursor: pointer; z-index: 100;
+            background: rgba(0,0,0,0.3); 
+            border: 1px solid var(--border);
+            padding: 4px; border-radius: 50px; /* 手機版：緊湊圓形 */
+            transition: all 0.2s;
         }
-        .user-avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; }
+        .user-info:active { transform: scale(0.95); background: rgba(56, 189, 248, 0.2); }
+        
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; display: block; }
+        
+        /* 手機版：預設隱藏文字，只顯示頭像 */
+        #userName { display: none; }
 
-        /* --- 3. 響應式佈局 --- */
+        /* 電腦版 (寬度大於 768px)：顯示文字 */
+        @media (min-width: 768px) {
+            .user-info { top: 20px; right: 20px; padding: 4px 12px 4px 4px; gap: 8px; }
+            #userName { display: block; color: var(--accent); font-size: 0.85rem; font-weight: bold; }
+        }
+
+        /* --- 4. 響應式佈局 --- */
         .dashboard-container { display: flex; flex-direction: column; gap: 15px; max-width: 1200px; margin: 0 auto; }
         
         @media (min-width: 768px) {
@@ -99,8 +114,8 @@
             table th:nth-child(5) { width: 50px !important; }
         }
 
-        /* --- 4. 元件樣式 --- */
-        h1 { text-align: center; margin-bottom: 15px; font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; color: var(--text-primary); }
+        /* --- 5. 元件樣式 --- */
+        h1 { text-align: center; margin-bottom: 15px; font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; color: var(--text-primary); margin-top: 15px; /* 增加頂部間距 */ }
         h1 span { color: var(--accent); text-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
         .card { background: var(--bg-card); border-radius: 14px; padding: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         h2 { font-size: 1rem; margin: 0 0 12px 0; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
@@ -246,7 +261,7 @@
     <div class="loader-text">CONNECTING TO MOTHER SHIP...</div>
 </div>
 
-<h1>曜日羽球｜<span>星際補給母艦 v4.0</span></h1>
+<h1>曜日羽球｜<span>星際補給母艦 v4.1</span></h1>
 
 <div class="dashboard-container">
 
@@ -348,12 +363,12 @@
 <script type="module">
     // ⚠️⚠️⚠️ 艦長請注意！請將您的 Gmail 填入下方陣列中 ⚠️⚠️⚠️
     const ADMIN_EMAILS = [
-        'ives173@gmail.com',  // 阿定
-        'zxcvasdf627@gmail.com', // 小安
-        'king230089@gmail.com',// 阿樂
-        'derlbyon@gmail.com',// 阿寶
-        'shine890527@gmail.com',// 閃亮
-        'j3933001@gmail.com'// 節省
+        'ives173@gmail.com',  
+        'zxcvasdf627@gmail.com', 
+        'king230089@gmail.com',
+        'derlbyon@gmail.com',
+        'shine890527@gmail.com',  // ✅ 逗號已補上
+        'j3933001@gmail.com'
     ]; 
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -409,7 +424,6 @@
             } else {
                 document.body.classList.add('guest-mode');
                 document.getElementById('userName').innerText = "訪客 (唯讀)";
-                // 只在第一次登入時提示，避免太煩
                 if(!sessionStorage.getItem('guestAlertShown')) {
                     alert(`歡迎 ${user.displayName}！\n您目前的權限為「訪客」，僅能瀏覽戰情儀表板，無法修改資料。`);
                     sessionStorage.setItem('guestAlertShown', 'true');
@@ -432,7 +446,6 @@
             document.getElementById('loader').style.opacity = 0;
             setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 500);
             let totalSched = Object.values(schedule).flat().length;
-            // 只有管理員才看得到初始化按鈕
             if(document.body.classList.contains('guest-mode')) {
                 document.getElementById('btnInitData').style.display = 'none';
             } else {
