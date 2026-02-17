@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>曜日羽球團 - 星際補給母艦 v4.1</title>
+    <title>曜日羽球團 - 星際補給母艦 v4.2</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -49,27 +49,57 @@
         }
         .btn-google:active { transform: scale(0.96); }
         
-        /* --- 3. 響應式使用者資訊列 (修正重疊問題) --- */
-        .user-info { 
-            position: absolute; top: 10px; right: 10px; 
-            display: flex; align-items: center; 
-            cursor: pointer; z-index: 100;
-            background: rgba(0,0,0,0.3); 
-            border: 1px solid var(--border);
-            padding: 4px; border-radius: 50px; /* 手機版：緊湊圓形 */
-            transition: all 0.2s;
+        /* --- 3. 頂部標題列 & 使用者資訊 (響應式配置) --- */
+        .header-container {
+            display: flex;
+            flex-direction: column; /* 手機版：垂直排列 */
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 15px;
+            padding-top: 10px;
         }
-        .user-info:active { transform: scale(0.95); background: rgba(56, 189, 248, 0.2); }
-        
-        .user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; display: block; }
-        
-        /* 手機版：預設隱藏文字，只顯示頭像 */
-        #userName { display: none; }
 
-        /* 電腦版 (寬度大於 768px)：顯示文字 */
+        h1 { 
+            text-align: center; font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; color: var(--text-primary); 
+            margin: 0; /* 移除預設邊距 */
+            /* 手機版：標題往下移一點，避免被上方資訊列擋住 */
+            padding-top: 40px; 
+        }
+        h1 span { color: var(--accent); text-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+        /* 版本號字體變小 */
+        .version-tag { font-size: 0.8rem; opacity: 0.8; }
+
+        /* 使用者資訊列：絕對定位在右上角 */
+        .user-info { 
+            position: absolute; top: 0; right: 0;
+            font-size: 0.8rem; color: var(--accent); 
+            display: flex; align-items: center; gap: 8px; cursor: pointer; z-index: 100;
+            background: rgba(0,0,0,0.4); padding: 4px 8px 4px 12px; border-radius: 50px; border: 1px solid var(--border);
+            backdrop-filter: blur(5px);
+        }
+        .user-avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; }
+
+        /* 電腦版 (寬度大於 768px)：水平排列，資訊列放回正常位置 */
         @media (min-width: 768px) {
-            .user-info { top: 20px; right: 20px; padding: 4px 12px 4px 4px; gap: 8px; }
-            #userName { display: block; color: var(--accent); font-size: 0.85rem; font-weight: bold; }
+            .header-container {
+                flex-direction: row; /* 改為水平排列 */
+                justify-content: space-between;
+                align-items: center;
+                padding-top: 0;
+            }
+            h1 { 
+                padding-top: 0; /* 移除手機版的 padding */
+                text-align: left; /* 標題靠左 */
+                font-size: 1.6rem; /* 電腦版標題稍微大一點 */
+            }
+            /* 資訊列不再絕對定位，回到正常的排版流中 */
+            .user-info {
+                position: static; 
+                background: rgba(0,0,0,0.2);
+                padding: 6px 12px 6px 16px;
+            }
+            .user-avatar { width: 32px; height: 32px; }
         }
 
         /* --- 4. 響應式佈局 --- */
@@ -115,8 +145,6 @@
         }
 
         /* --- 5. 元件樣式 --- */
-        h1 { text-align: center; margin-bottom: 15px; font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; color: var(--text-primary); margin-top: 15px; /* 增加頂部間距 */ }
-        h1 span { color: var(--accent); text-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
         .card { background: var(--bg-card); border-radius: 14px; padding: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         h2 { font-size: 1rem; margin: 0 0 12px 0; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
         
@@ -212,7 +240,7 @@
 
         .badge-combined { padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; min-width: 60px; }
         .st-green { background: var(--st-green-bg); color: var(--st-green-text); border: 1px solid rgba(52, 211, 153, 0.3); }
-        .st-yellow { background: var(--st-yellow-bg); color: var(--st-yellow-text); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .st-yellow { background: var(--st-yellow-bg); color: var(--st-yellow-text); border: 1px solid rgba(245, 158, 11, 0.3); }
         .st-red { background: var(--st-red-bg); color: var(--st-red-text); border: 1px solid rgba(248, 113, 113, 0.3); }
         .btn-del-row { background: transparent; color: var(--st-red-text); border: 1px solid var(--st-red-text); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; }
 
@@ -251,17 +279,19 @@
     </div>
 </div>
 
-<div class="user-info" id="userInfo" onclick="logout()" style="display:none;">
-    <span id="userName">艦長</span>
-    <img id="userImg" class="user-avatar" src="">
-</div>
-
 <div id="loader">
     <div style="font-size: 3rem;">🛸</div>
     <div class="loader-text">CONNECTING TO MOTHER SHIP...</div>
 </div>
 
-<h1>曜日羽球｜<span>星際補給母艦 v4.1</span></h1>
+<div class="header-container">
+    <h1>曜日羽球｜<span>星際補給母艦</span> <span class="version-tag">v4.2</span></h1>
+    
+    <div class="user-info" id="userInfo" onclick="logout()" style="display:none;">
+        <span id="userName">艦長</span>
+        <img id="userImg" class="user-avatar" src="">
+    </div>
+</div>
 
 <div class="dashboard-container">
 
@@ -367,7 +397,7 @@
         'zxcvasdf627@gmail.com', 
         'king230089@gmail.com',
         'derlbyon@gmail.com',
-        'shine890527@gmail.com',  // ✅ 逗號已補上
+        'shine890527@gmail.com', 
         'j3933001@gmail.com'
     ]; 
 
