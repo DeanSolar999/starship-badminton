@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>曜日羽球團 - 星際補給母艦 v5.0</title>
+    <title>曜日羽球團 - 星際補給母艦 v5.1</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -28,69 +28,86 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body { 
-            font-family: 'Noto Sans TC', sans-serif; /* 預設字體 */
+            font-family: 'Noto Sans TC', sans-serif;
             background-color: var(--bg-deep); 
             color: var(--text-primary);
             margin: 0; padding: 10px; padding-bottom: 140px; 
-            overflow-x: hidden; /* 防止星星超出 */
+            overflow-x: hidden;
             min-height: 100vh;
         }
 
-        /* --- 2. 動態星空背景 (Starfield) --- */
-        #starfield {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; pointer-events: none;
-            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+        /* --- 2. 登入介面專屬星際視覺 --- */
+        #authOverlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            /* 背景改為深空漸層 */
+            background: radial-gradient(circle at bottom center, #1b2735 0%, #090a0f 80%, #000000 100%);
+            z-index: 3000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.8s, transform 0.8s; /* 增加 transform轉場讓退出更平滑 */
             overflow: hidden;
         }
-        .star {
+
+        /* 星星容器 */
+        #loginStarfield {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; /* 在卡片後面 */
+            pointer-events: none;
+        }
+
+        /* 單顆星星樣式 */
+        .login-star {
             position: absolute;
             background: white;
             border-radius: 50%;
-            animation: twinkle var(--duration) ease-in-out infinite;
-            opacity: var(--opacity);
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.8); /* 星星光暈 */
+            opacity: 0;
+            animation: spaceDrift infinite linear;
         }
-        @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
 
-        /* --- 3. 登入介面 (全像投影風格) --- */
-        #authOverlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(5, 11, 20, 0.95); /* 深色遮罩 */
-            z-index: 3000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.8s;
+        /* 星星飄移與閃爍動畫 */
+        @keyframes spaceDrift {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            20% { opacity: var(--star-opacity); }
+            80% { opacity: var(--star-opacity); }
+            100% { transform: translateY(-150px) translateX(var(--drift-x)); opacity: 0; }
         }
+
         .login-card {
-            background: rgba(16, 30, 50, 0.6); /* 玻璃質感 */
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            padding: 40px 30px; border-radius: 12px;
-            border: 1px solid rgba(0, 243, 255, 0.3); /* 青色邊框 */
-            box-shadow: 0 0 40px rgba(0, 243, 255, 0.15), inset 0 0 20px rgba(0, 243, 255, 0.05);
-            text-align: center; max-width: 340px; width: 85%;
-            position: relative;
+            position: relative; z-index: 10; /* 確保在星星前面 */
+            background: rgba(16, 30, 50, 0.5); /* 更透明的玻璃 */
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); /* 強力毛玻璃效果 */
+            padding: 45px 35px; border-radius: 16px;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 243, 255, 0.05);
+            text-align: center; max-width: 360px; width: 85%;
             overflow: hidden;
+            transition: transform 0.3s ease-out;
         }
+        /* 登入卡片微微浮動動畫 */
+        .login-card { animation: cardFloat 6s ease-in-out infinite; }
+        @keyframes cardFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
         /* 掃描線裝飾 */
         .login-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            animation: scan 3s linear infinite; opacity: 0.5;
+            animation: scan 4s linear infinite; opacity: 0.3;
         }
-        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
 
-        .sys-title { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--accent); font-size: 1.2rem; letter-spacing: 2px; text-shadow: 0 0 10px var(--accent-glow); margin-bottom: 5px; }
-        .sys-subtitle { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 4px; margin-bottom: 30px; text-transform: uppercase; }
+        .sys-title { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--accent); font-size: 1.3rem; letter-spacing: 3px; text-shadow: 0 0 15px var(--accent-glow); margin-bottom: 8px; }
+        .sys-subtitle { font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: var(--text-secondary); letter-spacing: 5px; margin-bottom: 35px; text-transform: uppercase; opacity: 0.8; }
         
         .btn-google {
-            background: rgba(255, 255, 255, 0.95); color: #0f172a; font-weight: 700; border: none;
-            padding: 14px 24px; border-radius: 4px; font-size: 1rem; cursor: pointer;
+            background: rgba(255, 255, 255, 0.9); color: #0f172a; font-weight: 700; border: none;
+            padding: 15px 24px; border-radius: 8px; font-size: 1.05rem; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%;
             transition: all 0.3s;
-            border: 1px solid var(--accent);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-            font-family: 'Noto Sans TC', sans-serif;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            font-family: 'Noto Sans TC', sans-serif; letter-spacing: 1px;
         }
-        .btn-google:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(0, 243, 255, 0.6); }
+        .btn-google:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 0 35px rgba(0, 243, 255, 0.5); background: white; }
         .btn-google:active { transform: scale(0.98); }
 
         /* --- 4. 頂部標題列 (戰艦風格) --- */
@@ -124,14 +141,13 @@
             .user-avatar { width: 36px; height: 36px; }
         }
 
-        /* --- 5. 儀表板 & 元件 (沿用但微調顏色) --- */
+        /* --- 5. 儀表板 & 元件 --- */
         .dashboard-container { display: flex; flex-direction: column; gap: 15px; max-width: 1200px; margin: 0 auto; }
         
         @media (min-width: 768px) {
             .dashboard-container { display: grid; grid-template-columns: 1fr 1fr; grid-template-areas: "venue ball" "history history"; align-items: start; gap: 24px; max-width: 960px; }
             .area-venue { grid-area: venue; } .area-ball { grid-area: ball; } .area-history { grid-area: history; }
             .summary-bar { width: auto !important; min-width: 640px; padding: 10px 25px !important; left: 50% !important; bottom: 40px !important; transform: translateX(-50%); border-radius: 12px !important; background: rgba(5, 11, 20, 0.9) !important; border: 1px solid rgba(0, 243, 255, 0.2) !important; box-shadow: 0 0 30px rgba(0, 243, 255, 0.1); }
-            /* 電腦版表格優化 */
             table th:nth-child(1) { width: 80px !important; } table th:nth-child(2) { width: auto !important; } table th:nth-child(3) { width: 22% !important; } table th:nth-child(4) { width: 15% !important; } table th:nth-child(5) { width: 50px !important; }
         }
 
@@ -152,7 +168,6 @@
         .ball-btn.active { background: rgba(0, 243, 255, 0.1); color: var(--accent); border-color: var(--accent); }
         .ball-del-btn { position: absolute; top: -5px; right: -5px; width: 20px; height: 20px; background: var(--neon-red); color: white; border-radius: 50%; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; z-index: 2; border: 2px solid var(--bg-card); }
 
-        /* 場地顏色邊框 */
         .day-1 { border-left-color: var(--d-1); } .day-1.active { border-color: var(--d-1); color: var(--d-1); box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
         .day-2 { border-left-color: var(--d-2); } .day-2.active { border-color: var(--d-2); color: var(--d-2); box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
         .day-3 { border-left-color: var(--d-3); } .day-3.active { border-color: var(--d-3); color: var(--d-3); box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
@@ -195,7 +210,6 @@
         .venue-group { margin-top: 20px; background: rgba(255,255,255,0.02); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); border-left-width: 4px; }
         .group-header { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); font-family: 'Orbitron', sans-serif; }
         .gh-title { font-size: 1rem; font-weight: 700; }
-        /* 日期顏色群組 */
         .day-1 { border-left-color: var(--d-1); } .day-1 .gh-title { color: var(--d-1); } .day-2 { border-left-color: var(--d-2); } .day-2 .gh-title { color: var(--d-2); }
         .day-3 { border-left-color: var(--d-3); } .day-3 .gh-title { color: var(--d-3); } .day-4 { border-left-color: var(--d-4); } .day-4 .gh-title { color: var(--d-4); }
         .day-5 { border-left-color: var(--d-5); } .day-5 .gh-title { color: var(--d-5); } .day-6 { border-left-color: var(--d-6); } .day-6 .gh-title { color: var(--d-6); }
@@ -249,15 +263,15 @@
 </head>
 <body>
 
-<div id="starfield"></div>
-
 <div id="authOverlay">
+    <div id="loginStarfield"></div>
+    
     <div class="login-card">
         <div class="sys-title">曜日羽球｜戰情室</div>
         <div class="sys-subtitle">System Access Required</div>
-        <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:25px;">請驗證艦長生物特徵以存取母艦資料庫</p>
+        <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:25px; font-weight:bold; letter-spacing:1px;">請驗證艦長生物特徵以存取母艦資料庫</p>
         <button class="btn-google" onclick="signIn()">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22">
             [ 請求存取權限 ]
         </button>
     </div>
@@ -269,7 +283,7 @@
 </div>
 
 <div class="header-container">
-    <h1>曜日羽球｜<span>星際補給母艦</span> <span class="version-tag">v5.0</span></h1>
+    <h1>曜日羽球｜<span>星際補給母艦</span> <span class="version-tag">v5.1</span></h1>
     
     <div class="user-info" id="userInfo" onclick="logout()" style="display:none;">
         <span id="userName">艦長</span>
@@ -375,16 +389,9 @@
 </div>
 
 <script type="module">
-    // ⚠️⚠️⚠️ 艦長請注意！請將您的 Gmail 填入下方陣列中 ⚠️⚠️⚠️
     const ADMIN_EMAILS = [
-        'ives173@gmail.com',      // 阿定
-        'zxcvasdf627@gmail.com',  // 小安
-        'king230089@gmail.com',   // 阿樂
-        'derlbyon@gmail.com',     // 阿寶
-        'shine890527@gmail.com',  // 閃亮
-        'j3933001@gmail.com',     // 節省
-        'jimmy1313677@gmail.com', // 文文
-        'songchiyu06@gmail.com'   // 小飛
+        'ives173@gmail.com',      'zxcvasdf627@gmail.com',  'king230089@gmail.com',   'derlbyon@gmail.com',     
+        'shine890527@gmail.com',  'j3933001@gmail.com',     'jimmy1313677@gmail.com', 'songchiyu06@gmail.com'
     ]; 
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -415,24 +422,34 @@
     let isDbLoaded = { sched: false, ball: false, rec: false };
     let venueLastStock = {}; 
 
-    // --- Starfield Animation Logic ---
-    function initStarfield() {
-        const layer = document.getElementById('starfield');
-        const count = 50; 
+    // --- 登入頁面專屬星空動畫 ---
+    function initLoginStarfield() {
+        const layer = document.getElementById('loginStarfield');
+        if(!layer) return;
+        const count = 80; // 星星數量
         for(let i=0; i<count; i++) {
             const star = document.createElement('div');
-            star.className = 'star';
-            const s = Math.random() * 2 + 1; 
+            star.className = 'login-star';
+            const s = Math.random() * 2 + 1; // 大小
             star.style.width = s + 'px';
             star.style.height = s + 'px';
             star.style.left = Math.random() * 100 + '%';
             star.style.top = Math.random() * 100 + '%';
-            star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
-            star.style.setProperty('--opacity', Math.random());
+            // 隨機動畫參數
+            const duration = Math.random() * 10 + 5; // 5~15秒
+            const delay = Math.random() * -15; // 隨機延遲開始
+            const opacity = Math.random() * 0.7 + 0.3; // 亮度
+            const driftX = (Math.random() - 0.5) * 100 + 'px'; // 橫向飄移量
+            
+            star.style.animationDuration = duration + 's';
+            star.style.animationDelay = delay + 's';
+            star.style.setProperty('--star-opacity', opacity);
+            star.style.setProperty('--drift-x', driftX);
+            
             layer.appendChild(star);
         }
     }
-    initStarfield();
+    initLoginStarfield(); // 啟動星空
 
     // --- Auth Logic ---
     window.signIn = () => {
@@ -446,13 +463,16 @@
     onAuthStateChanged(auth, (user) => {
         if (user) {
             currentUser = user;
-            document.getElementById('authOverlay').style.opacity = 0;
-            setTimeout(() => document.getElementById('authOverlay').style.display = 'none', 800);
+            const overlay = document.getElementById('authOverlay');
+            overlay.style.opacity = 0;
+            // 登入成功後，讓整個登入層向上飛出，製造進入母艦的感覺
+            overlay.style.transform = 'translateY(-100vh) scale(1.1)'; 
+            
+            setTimeout(() => overlay.style.display = 'none', 800);
             
             document.getElementById('userInfo').style.display = 'flex';
             document.getElementById('userImg').src = user.photoURL;
             
-            // Check Admin Permissions
             if (ADMIN_EMAILS.includes(user.email)) {
                 document.body.classList.remove('guest-mode');
                 document.getElementById('userName').innerText = "艦長 (Admin)";
@@ -464,14 +484,16 @@
                     sessionStorage.setItem('guestAlertShown', 'true');
                 }
             }
-            
-            // Start Loading Data
             if (!isDbLoaded.sched) startDataListeners();
-            
         } else {
             currentUser = null;
-            document.getElementById('authOverlay').style.display = 'flex';
-            document.getElementById('authOverlay').style.opacity = 1;
+            const overlay = document.getElementById('authOverlay');
+            overlay.style.display = 'flex';
+            // 登出時，重置位置並顯示
+            setTimeout(() => {
+                overlay.style.opacity = 1;
+                overlay.style.transform = 'translateY(0) scale(1)';
+            }, 50);
             document.getElementById('userInfo').style.display = 'none';
         }
     });
