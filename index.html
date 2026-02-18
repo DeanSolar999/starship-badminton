@@ -3,229 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>曜日羽球團 - 星際補給母艦 v4.4</title>
+    <title>曜日羽球團 - 星際補給母艦 v5.0</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- 1. 核心變數 --- */
+        /* --- 1. 核心變數 & 星際主題 --- */
         :root {
-            --bg-main: #0f172a; --bg-card: #1e293b; --bg-input: #334155;
-            --text-primary: #f1f5f9; --text-secondary: #94a3b8;
-            --accent: #38bdf8; --border: #475569;
+            --bg-deep: #050b14; /* 深邃宇宙黑 */
+            --bg-card: rgba(15, 23, 42, 0.7); /* 半透明玻璃 */
+            --bg-input: rgba(51, 65, 85, 0.6);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent: #00f3ff; /* 霓虹青 */
+            --accent-glow: rgba(0, 243, 255, 0.4);
+            --border: rgba(148, 163, 184, 0.2);
             --d-1: #a855f7; --d-2: #ef4444; --d-3: #3b82f6; --d-4: #22c55e;
             --d-5: #f59e0b; --d-6: #f97316; --d-0: #eab308; --d-temp: #94a3b8;
-            --neon-red: #ff1744; --neon-red-glow: rgba(255, 23, 68, 0.35); --neon-red-bg: rgba(255, 23, 68, 0.1);
-            --st-green-bg: rgba(16, 185, 129, 0.15); --st-green-text: #34d399; 
-            --st-yellow-bg: rgba(245, 158, 11, 0.15); --st-yellow-text: #fbbf24;
-            --st-red-bg: rgba(239, 68, 68, 0.15);    --st-red-text: #f87171;
+            --neon-red: #ff1744; --st-green-text: #34d399; --st-red-text: #f87171;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-main); color: var(--text-primary);
+            font-family: 'Noto Sans TC', sans-serif; /* 預設字體 */
+            background-color: var(--bg-deep); 
+            color: var(--text-primary);
             margin: 0; padding: 10px; padding-bottom: 140px; 
+            overflow-x: hidden; /* 防止星星超出 */
+            min-height: 100vh;
         }
 
-        /* --- 2. 登入介面 --- */
+        /* --- 2. 動態星空背景 (Starfield) --- */
+        #starfield {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; pointer-events: none;
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+            overflow: hidden;
+        }
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration) ease-in-out infinite;
+            opacity: var(--opacity);
+        }
+        @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+
+        /* --- 3. 登入介面 (全像投影風格) --- */
         #authOverlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 23, 42, 0.98); z-index: 3000;
+            background: rgba(5, 11, 20, 0.95); /* 深色遮罩 */
+            z-index: 3000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s;
+            transition: opacity 0.8s;
         }
         .login-card {
-            background: var(--bg-card); padding: 40px 30px; border-radius: 20px;
-            border: 1px solid var(--border); box-shadow: 0 0 50px rgba(56, 189, 248, 0.15);
-            text-align: center; max-width: 320px; width: 85%;
-        }
-        .btn-google {
-            background: white; color: #1e293b; font-weight: bold; border: none;
-            padding: 14px 24px; border-radius: 50px; font-size: 1rem; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%;
-            margin-top: 25px; transition: transform 0.2s;
-        }
-        .btn-google:active { transform: scale(0.96); }
-        
-        /* --- 3. 頂部標題列 & 使用者資訊 --- */
-        .header-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            background: rgba(16, 30, 50, 0.6); /* 玻璃質感 */
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            padding: 40px 30px; border-radius: 12px;
+            border: 1px solid rgba(0, 243, 255, 0.3); /* 青色邊框 */
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.15), inset 0 0 20px rgba(0, 243, 255, 0.05);
+            text-align: center; max-width: 340px; width: 85%;
             position: relative;
-            margin-bottom: 15px;
-            padding-top: 10px;
+            overflow: hidden;
         }
+        /* 掃描線裝飾 */
+        .login-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            animation: scan 3s linear infinite; opacity: 0.5;
+        }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
 
+        .sys-title { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--accent); font-size: 1.2rem; letter-spacing: 2px; text-shadow: 0 0 10px var(--accent-glow); margin-bottom: 5px; }
+        .sys-subtitle { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 4px; margin-bottom: 30px; text-transform: uppercase; }
+        
+        .btn-google {
+            background: rgba(255, 255, 255, 0.95); color: #0f172a; font-weight: 700; border: none;
+            padding: 14px 24px; border-radius: 4px; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%;
+            transition: all 0.3s;
+            border: 1px solid var(--accent);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .btn-google:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(0, 243, 255, 0.6); }
+        .btn-google:active { transform: scale(0.98); }
+
+        /* --- 4. 頂部標題列 (戰艦風格) --- */
+        .header-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; margin-bottom: 20px; padding-top: 15px;
+        }
         h1 { 
-            text-align: center; font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; color: var(--text-primary); 
-            margin: 0; 
-            padding-top: 40px; 
+            text-align: center; font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 900; letter-spacing: 2px; color: white; 
+            margin: 0; padding-top: 40px; text-shadow: 0 0 10px rgba(255,255,255,0.3);
         }
-        h1 span { color: var(--accent); text-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
-        .version-tag { font-size: 0.8rem; opacity: 0.8; }
+        h1 span { color: var(--accent); text-shadow: 0 0 15px var(--accent-glow); }
+        .version-tag { font-size: 0.7rem; color: var(--text-secondary); vertical-align: super; opacity: 0.7; }
 
+        /* 使用者資訊列 (HUD 風格) */
         .user-info { 
             position: absolute; top: 0; right: 0;
-            font-size: 0.8rem; color: var(--accent); 
+            font-size: 0.8rem; color: var(--accent); font-family: 'Orbitron', sans-serif;
             display: flex; align-items: center; gap: 8px; cursor: pointer; z-index: 100;
-            background: rgba(0,0,0,0.4); padding: 4px 8px 4px 12px; border-radius: 50px; border: 1px solid var(--border);
+            background: rgba(0, 20, 40, 0.6); padding: 4px 10px 4px 4px; 
+            border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 30px;
             backdrop-filter: blur(5px);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
         }
-        .user-avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; }
+        .user-avatar { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; }
 
         @media (min-width: 768px) {
-            .header-container {
-                flex-direction: row; 
-                justify-content: space-between;
-                align-items: center;
-                padding-top: 0;
-            }
-            h1 { 
-                padding-top: 0; 
-                text-align: left; 
-                font-size: 1.6rem; 
-            }
-            .user-info {
-                position: static; 
-                background: rgba(0,0,0,0.2);
-                padding: 6px 12px 6px 16px;
-            }
-            .user-avatar { width: 32px; height: 32px; }
+            .header-container { flex-direction: row; justify-content: space-between; align-items: center; padding-top: 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 25px; }
+            h1 { padding-top: 0; text-align: left; font-size: 1.8rem; }
+            .user-info { position: static; background: rgba(0,0,0,0.3); padding: 6px 16px 6px 6px; }
+            .user-avatar { width: 36px; height: 36px; }
         }
 
-        /* --- 4. 響應式佈局 --- */
+        /* --- 5. 儀表板 & 元件 (沿用但微調顏色) --- */
         .dashboard-container { display: flex; flex-direction: column; gap: 15px; max-width: 1200px; margin: 0 auto; }
         
         @media (min-width: 768px) {
-            .dashboard-container {
-                display: grid; grid-template-columns: 1fr 1fr;
-                grid-template-areas: "venue ball" "history history";
-                align-items: start; gap: 24px; padding-top: 20px; max-width: 960px;
-            }
+            .dashboard-container { display: grid; grid-template-columns: 1fr 1fr; grid-template-areas: "venue ball" "history history"; align-items: start; gap: 24px; max-width: 960px; }
             .area-venue { grid-area: venue; } .area-ball { grid-area: ball; } .area-history { grid-area: history; }
-            
-            body { 
-                background-color: #0b1120; 
-                background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0b1120 60%); 
-                min-height: 100vh; margin:0; padding: 20px; 
-                padding-bottom: 250px !important; 
-            }
-            .card { border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-            
-            .summary-bar { 
-                width: auto !important; min-width: 640px; padding: 10px 25px !important; 
-                left: 50% !important; bottom: 40px !important; transform: translateX(-50%); 
-                border-radius: 20px !important; background: rgba(15, 23, 42, 0.9) !important; backdrop-filter: blur(12px);
-                border: 1px solid rgba(255,255,255,0.1) !important;
-                display: flex !important; flex-direction: column; gap: 8px; 
-                box-shadow: 0 20px 50px rgba(0,0,0,0.6); 
-            }
-            .hud-row-main { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; }
-            .hud-item { flex-direction: row; gap: 10px; align-items: baseline; }
-            .label { font-size: 0.8rem; margin-bottom: 0; opacity: 0.8; } .val { font-size: 1.3rem; }
-            
-            table tr:hover td { background: rgba(255,255,255,0.05); }
-            .venue-btn:hover, .ball-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-
+            .summary-bar { width: auto !important; min-width: 640px; padding: 10px 25px !important; left: 50% !important; bottom: 40px !important; transform: translateX(-50%); border-radius: 12px !important; background: rgba(5, 11, 20, 0.9) !important; border: 1px solid rgba(0, 243, 255, 0.2) !important; box-shadow: 0 0 30px rgba(0, 243, 255, 0.1); }
             /* 電腦版表格優化 */
-            table th:nth-child(1) { width: 80px !important; }
-            table th:nth-child(2) { width: auto !important; }
-            table th:nth-child(3) { width: 22% !important; }
-            table th:nth-child(4) { width: 15% !important; }
-            table th:nth-child(5) { width: 50px !important; }
+            table th:nth-child(1) { width: 80px !important; } table th:nth-child(2) { width: auto !important; } table th:nth-child(3) { width: 22% !important; } table th:nth-child(4) { width: 15% !important; } table th:nth-child(5) { width: 50px !important; }
         }
 
-        /* --- 5. 元件樣式 --- */
-        .card { background: var(--bg-card); border-radius: 14px; padding: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        h2 { font-size: 1rem; margin: 0 0 12px 0; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .card { background: var(--bg-card); border-radius: 8px; padding: 15px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.4); backdrop-filter: blur(10px); }
+        h2 { font-family: 'Orbitron', sans-serif; font-size: 0.9rem; margin: 0 0 12px 0; color: var(--accent); font-weight: 700; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 243, 255, 0.2); padding-bottom: 8px; letter-spacing: 1px; }
         
-        input { transition: 0.2s; border-radius: 8px; } input:focus { border-color: var(--accent); outline: none; }
+        input { transition: 0.3s; border-radius: 4px; background: rgba(0,0,0,0.3) !important; border: 1px solid var(--border); color: white !important; font-family: 'Orbitron', sans-serif; } 
+        input:focus { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); outline: none; }
         
-        input[type="date"] { 
-            width: 100%; max-width: 260px; padding: 10px; 
-            background: var(--bg-input); border: 1px solid var(--border); 
-            color: white; font-size: 1rem; font-weight: bold; 
-            display: block; margin: 0 auto; text-align: center; border-radius: 50px; 
-        }
+        input[type="date"] { width: 100%; max-width: 260px; padding: 10px; font-size: 1rem; font-weight: bold; display: block; margin: 0 auto; text-align: center; border-radius: 30px; letter-spacing: 1px; }
 
         .venue-grid, .ball-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .venue-btn, .ball-btn { background: var(--bg-main); border: 1px solid var(--border); padding: 12px 4px; border-radius: 10px; cursor: pointer; text-align: center; color: var(--text-secondary); transition: all 0.2s; position: relative; overflow: hidden; }
-        .venue-btn { border-left-width: 4px; }
+        .venue-btn, .ball-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 12px 4px; border-radius: 6px; cursor: pointer; text-align: center; color: var(--text-secondary); transition: all 0.2s; position: relative; overflow: hidden; }
+        .venue-btn { border-left-width: 3px; }
         .venue-btn strong { display: block; font-size: 0.95rem; margin-bottom: 3px; color: var(--text-primary); }
         .venue-btn span { font-size: 0.7rem; opacity: 0.7; }
-        .venue-btn.active { background: var(--bg-input); box-shadow: inset 0 0 15px rgba(0,0,0,0.5); border-color: var(--accent); } .venue-btn.active strong { color: var(--accent); }
-        .ball-btn.active { background: var(--bg-input); color: var(--accent); border-color: var(--accent); }
+        .venue-btn.active { background: rgba(0, 243, 255, 0.1); border-color: var(--accent); box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); } .venue-btn.active strong { color: var(--accent); }
+        .ball-btn.active { background: rgba(0, 243, 255, 0.1); color: var(--accent); border-color: var(--accent); }
         .ball-del-btn { position: absolute; top: -5px; right: -5px; width: 20px; height: 20px; background: var(--neon-red); color: white; border-radius: 50%; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; z-index: 2; border: 2px solid var(--bg-card); }
 
-        .day-1 { border-left-color: var(--d-1); } .day-1.active { border-color: var(--d-1); color: var(--d-1); }
-        .day-2 { border-left-color: var(--d-2); } .day-2.active { border-color: var(--d-2); color: var(--d-2); }
-        .day-3 { border-left-color: var(--d-3); } .day-3.active { border-color: var(--d-3); color: var(--d-3); }
-        .day-4 { border-left-color: var(--d-4); } .day-4.active { border-color: var(--d-4); color: var(--d-4); }
-        .day-5 { border-left-color: var(--d-5); } .day-5.active { border-color: var(--d-5); color: var(--d-5); }
-        .day-6 { border-left-color: var(--d-6); } .day-6.active { border-color: var(--d-6); color: var(--d-6); }
-        .day-0 { border-left-color: var(--d-0); } .day-0.active { border-color: var(--d-0); color: var(--d-0); }
+        /* 場地顏色邊框 */
+        .day-1 { border-left-color: var(--d-1); } .day-1.active { border-color: var(--d-1); color: var(--d-1); box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
+        .day-2 { border-left-color: var(--d-2); } .day-2.active { border-color: var(--d-2); color: var(--d-2); box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+        .day-3 { border-left-color: var(--d-3); } .day-3.active { border-color: var(--d-3); color: var(--d-3); box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
+        .day-4 { border-left-color: var(--d-4); } .day-4.active { border-color: var(--d-4); color: var(--d-4); box-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
+        .day-5 { border-left-color: var(--d-5); } .day-5.active { border-color: var(--d-5); color: var(--d-5); box-shadow: 0 0 10px rgba(245, 158, 11, 0.2); }
+        .day-6 { border-left-color: var(--d-6); } .day-6.active { border-color: var(--d-6); color: var(--d-6); box-shadow: 0 0 10px rgba(249, 115, 22, 0.2); }
+        .day-0 { border-left-color: var(--d-0); } .day-0.active { border-color: var(--d-0); color: var(--d-0); box-shadow: 0 0 10px rgba(234, 179, 8, 0.2); }
         .day-temp { border-left-color: var(--d-temp); }
 
-        #venueAdjustPanel, #addVenueForm { margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px; border: 1px solid var(--border); display: none; }
+        #venueAdjustPanel, #addVenueForm { margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--border); display: none; }
         #addVenueForm { background: var(--bg-input); }
         .adjust-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .adjust-title { font-weight: bold; color: var(--accent); font-size: 1rem; }
-        .btn-toggle-edit { background: transparent; border: 1px solid var(--text-secondary); color: var(--text-secondary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
+        .btn-toggle-edit { background: transparent; border: 1px solid var(--text-secondary); color: var(--text-secondary); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
         .btn-toggle-edit.active { background: var(--bg-input); color: var(--accent); border-color: var(--accent); }
         #adjustContent { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
         .adjust-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.9rem; }
-        .stepper-group { display: flex; align-items: center; gap: 6px; background: var(--bg-input); padding: 3px; border-radius: 8px; border: 1px solid var(--border); }
-        .step-btn { width: 32px; height: 32px; background: var(--bg-card); border: none; color: white; border-radius: 6px; cursor: pointer; font-size: 1.1rem; }
-        .step-btn:active { background: var(--accent); color: var(--bg-main); }
-        .step-val { width: 50px; text-align: center; font-size: 1rem; font-weight: bold; font-family: monospace; color: var(--accent); }
+        .stepper-group { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.2); padding: 3px; border-radius: 4px; border: 1px solid var(--border); }
+        .step-btn { width: 32px; height: 32px; background: rgba(255,255,255,0.05); border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 1.1rem; }
+        .step-btn:active { background: var(--accent); color: var(--bg-deep); }
+        .step-val { width: 50px; text-align: center; font-size: 1rem; font-weight: bold; font-family: 'Orbitron', monospace; color: var(--accent); }
         
         .stock-panel { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .stock-row { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 8px; padding: 6px; border-radius: 8px; background: rgba(255,255,255,0.03); }
-        .stock-row.main { background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); } 
+        .stock-row { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 8px; padding: 6px; border-radius: 6px; background: rgba(255,255,255,0.03); }
+        .stock-row.main { background: rgba(0, 243, 255, 0.05); border: 1px solid rgba(0, 243, 255, 0.2); } 
         .stock-label-multi { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; font-size: 0.8rem; color: var(--text-secondary); text-align: right; padding-right: 4px; font-weight: bold; line-height: 1.1; }
         .stock-label { font-size: 0.8rem; color: var(--text-secondary); text-align: right; padding-right: 4px; font-weight: bold; }
         .num-control { display: flex; align-items: center; gap: 4px; width: 100%; }
-        .num-btn { width: 36px; height: 36px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: white; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .num-btn:active { background: var(--accent); color: var(--bg-main); }
-        .num-input { flex: 1; height: 36px; background: transparent; border: none; text-align: center; color: white; font-size: 1.2rem; font-family: monospace; font-weight: bold; width: 40px; outline: none; }
+        .num-btn { width: 36px; height: 36px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 4px; color: white; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .num-btn:active { background: var(--accent); color: var(--bg-deep); }
+        .num-input { flex: 1; height: 36px; background: transparent; border: none; text-align: center; color: white; font-size: 1.2rem; font-family: 'Orbitron', monospace; font-weight: bold; width: 40px; outline: none; }
         
         .save-actions { display: flex; gap: 8px; margin-top: 15px; }
-        .btn-save { flex: 2; padding: 14px; background: var(--accent); color: #0f172a; border: none; border-radius: 10px; font-size: 1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-copy { flex: 1; padding: 14px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
+        .btn-save { flex: 2; padding: 14px; background: var(--accent); color: #050b14; border: none; border-radius: 6px; font-size: 1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); transition: 0.2s; font-family: 'Noto Sans TC', sans-serif; }
+        .btn-save:active { transform: scale(0.98); box-shadow: 0 0 5px rgba(0, 243, 255, 0.4); }
+        .btn-copy { flex: 1; padding: 14px; background: transparent; color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
         
-        /* 訪客模式：隱藏所有寫入按鈕 */
-        .guest-mode .btn-save, 
-        .guest-mode .btn-neon-danger, 
-        .guest-mode .ball-del-btn, 
-        .guest-mode .init-btn, 
-        .guest-mode .btn-toggle-edit,
-        .guest-mode .edit-toggle { 
-            display: none !important; 
-        }
+        .guest-mode .btn-save, .guest-mode .btn-neon-danger, .guest-mode .ball-del-btn, .guest-mode .init-btn, .guest-mode .btn-toggle-edit, .guest-mode .edit-toggle { display: none !important; }
 
-        .venue-group { margin-top: 20px; background: var(--bg-main); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); border-left-width: 5px; }
-        .group-header { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-input); }
-        .gh-title { font-size: 1rem; font-weight: 800; }
+        .venue-group { margin-top: 20px; background: rgba(255,255,255,0.02); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); border-left-width: 4px; }
+        .group-header { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); font-family: 'Orbitron', sans-serif; }
+        .gh-title { font-size: 1rem; font-weight: 700; }
+        /* 日期顏色群組 */
         .day-1 { border-left-color: var(--d-1); } .day-1 .gh-title { color: var(--d-1); } .day-2 { border-left-color: var(--d-2); } .day-2 .gh-title { color: var(--d-2); }
         .day-3 { border-left-color: var(--d-3); } .day-3 .gh-title { color: var(--d-3); } .day-4 { border-left-color: var(--d-4); } .day-4 .gh-title { color: var(--d-4); }
         .day-5 { border-left-color: var(--d-5); } .day-5 .gh-title { color: var(--d-5); } .day-6 { border-left-color: var(--d-6); } .day-6 .gh-title { color: var(--d-6); }
         .day-0 { border-left-color: var(--d-0); } .day-0 .gh-title { color: var(--d-0); } .day-temp { border-left-color: var(--d-temp); } .day-temp .gh-title { color: var(--d-temp); }
 
         .month-dashboard { display: flex; gap: 5px; padding: 8px 5px; overflow-x: auto; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); }
-        .month-card { flex: 0 0 32%; max-width: 33%; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 2px; border-top: 2px solid transparent; }
+        .month-card { flex: 0 0 32%; max-width: 33%; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 2px; border-top: 2px solid transparent; }
         .day-1 .month-card { border-top-color: var(--d-1); } .day-2 .month-card { border-top-color: var(--d-2); } .day-3 .month-card { border-top-color: var(--d-3); }
         .day-4 .month-card { border-top-color: var(--d-4); } .day-5 .month-card { border-top-color: var(--d-5); } .day-6 .month-card { border-top-color: var(--d-6); } .day-0 .month-card { border-top-color: var(--d-0); }
         
         .mc-header { font-size: 0.75rem; font-weight: bold; color: var(--text-primary); border-bottom: 1px dashed var(--border); padding-bottom: 3px; margin-bottom: 3px; text-align: center; }
-        .mc-row { display: flex; justify-content: space-between; font-size: 0.65rem; } .mc-label { color: var(--text-secondary); } .mc-val { font-weight: bold; color: var(--text-primary); }
-        .mc-stock-box { margin-top: 6px; padding: 4px; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .mc-row { display: flex; justify-content: space-between; font-size: 0.65rem; } .mc-label { color: var(--text-secondary); } .mc-val { font-weight: bold; color: var(--text-primary); font-family: 'Orbitron', monospace; }
+        .mc-stock-box { margin-top: 6px; padding: 4px; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; gap: 4px; }
         .mc-stock-label { writing-mode: vertical-rl; text-orientation: upright; font-size: 0.6rem; color: var(--text-secondary); letter-spacing: 2px; margin: 0; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 3px; }
-        .mc-stock-num { font-size: 1.4rem; font-weight: 800; font-family: monospace; line-height: 1; position: relative; flex: 1; text-align: center; }
-        .mc-stock-unit { font-size: 0.55rem; position: absolute; bottom: 0; right: -2px; opacity: 0.6; font-weight: normal; }
+        .mc-stock-num { font-size: 1.4rem; font-weight: 800; font-family: 'Orbitron', monospace; line-height: 1; position: relative; flex: 1; text-align: center; }
+        .mc-stock-unit { font-size: 0.55rem; position: absolute; bottom: 0; right: -2px; opacity: 0.6; font-weight: normal; font-family: sans-serif; }
         .stock-safe { color: #4ade80; } .stock-warn { color: #facc15; } .stock-crit { color: #f87171; text-shadow: 0 0 5px rgba(248, 113, 113, 0.4); }
 
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; table-layout: fixed; }
@@ -234,53 +220,56 @@
         th:nth-child(1) { width: 50px; } th:nth-child(2) { width: auto; } th:nth-child(3) { width: 75px; } th:nth-child(4) { width: 50px; } th:nth-child(5) { width: 35px; }
 
         .badge-combined { padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; min-width: 60px; }
-        .st-green { background: var(--st-green-bg); color: var(--st-green-text); border: 1px solid rgba(52, 211, 153, 0.3); }
-        .st-yellow { background: var(--st-yellow-bg); color: var(--st-yellow-text); border: 1px solid rgba(251, 191, 36, 0.3); }
-        .st-red { background: var(--st-red-bg); color: var(--st-red-text); border: 1px solid rgba(248, 113, 113, 0.3); }
-        .btn-del-row { background: transparent; color: var(--st-red-text); border: 1px solid var(--st-red-text); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; }
+        .st-green { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+        .st-yellow { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+        .st-red { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+        .btn-del-row { background: transparent; color: #f87171; border: 1px solid #f87171; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; }
 
-        .summary-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: block; padding: 8px 5px; z-index: 999; }
+        .summary-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(5, 11, 20, 0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: block; padding: 8px 5px; z-index: 999; }
         #brandBar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 5px; border-bottom: 1px dashed rgba(255,255,255,0.1); scrollbar-width: none; }
         #brandBar::-webkit-scrollbar { display: none; }
-        .brand-tag { background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #bae6fd; font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; white-space: nowrap; font-weight: bold; flex-shrink: 0; display: flex; align-items: center; gap: 4px; }
-        .brand-tag span { font-family: monospace; font-size: 0.8rem; color: white; }
+        .brand-tag { background: rgba(0, 243, 255, 0.1); border: 1px solid rgba(0, 243, 255, 0.3); color: var(--accent); font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; white-space: nowrap; font-weight: bold; flex-shrink: 0; display: flex; align-items: center; gap: 4px; font-family: 'Orbitron', sans-serif; }
+        .brand-tag span { font-family: 'Orbitron', monospace; font-size: 0.8rem; color: white; }
         .cpch-alert { color: var(--neon-red) !important; text-shadow: 0 0 5px var(--neon-red-glow); } 
         .hud-row-main { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
         .hud-item { border-radius: 6px; padding: 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
-        .hud-blue { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); } .hud-blue .val { color: #60a5fa; }
-        .hud-orange { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); } .hud-orange .val { color: #fbbf24; }
-        .hud-purple { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); } .hud-purple .val { color: #c084fc; }
-        .hud-teal { background: rgba(20, 184, 166, 0.15); border: 1px solid rgba(20, 184, 166, 0.3); } .hud-teal .val { color: #2dd4bf; }
-        .label { font-size: 0.6rem; color: rgba(255,255,255,0.6); margin-bottom: 1px; } .val { font-size: 0.85rem; font-weight: 800; font-family: monospace; }
+        .hud-blue { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); } .hud-blue .val { color: #60a5fa; }
+        .hud-orange { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); } .hud-orange .val { color: #fbbf24; }
+        .hud-purple { background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); } .hud-purple .val { color: #c084fc; }
+        .hud-teal { background: rgba(20, 184, 166, 0.1); border: 1px solid rgba(20, 184, 166, 0.3); } .hud-teal .val { color: #2dd4bf; }
+        .label { font-size: 0.6rem; color: rgba(255,255,255,0.5); margin-bottom: 1px; letter-spacing: 1px; } .val { font-size: 0.85rem; font-weight: 800; font-family: 'Orbitron', monospace; }
         .action-bar { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-act { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-secondary); cursor: pointer; font-weight: bold; }
+        .btn-act { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: var(--text-secondary); cursor: pointer; font-weight: bold; }
         
-        #loader { position: fixed; top:0; left:0; right:0; bottom:0; background: var(--bg-main); display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 2000; transition: opacity 0.5s; }
-        .loader-text { margin-top: 15px; color: var(--accent); font-weight: bold; letter-spacing: 2px; animation: pulse 1.5s infinite; }
+        #loader { position: fixed; top:0; left:0; right:0; bottom:0; background: var(--bg-deep); display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 2000; transition: opacity 0.5s; }
+        .loader-text { margin-top: 15px; color: var(--accent); font-weight: bold; letter-spacing: 2px; font-family: 'Orbitron', sans-serif; animation: pulse 1.5s infinite; text-shadow: 0 0 10px var(--accent-glow); }
         @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
         .init-btn { background: var(--d-3); color: white; padding: 12px; border-radius: 12px; border: none; font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 20px; display: none; width: 100%; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); border: 1px solid var(--accent); }
     </style>
 </head>
 <body>
 
+<div id="starfield"></div>
+
 <div id="authOverlay">
     <div class="login-card">
-        <h2 style="color:var(--accent); margin-bottom:10px;">曜日羽球｜戰情室</h2>
-        <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:20px;">請登入以存取星際補給資料庫</p>
+        <div class="sys-title">曜日羽球｜戰情室</div>
+        <div class="sys-subtitle">System Access Required</div>
+        <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:25px;">請驗證艦長生物特徵以存取母艦資料庫</p>
         <button class="btn-google" onclick="signIn()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
-            使用 Google 帳號登入
+            [ 請求存取權限 ]
         </button>
     </div>
 </div>
 
 <div id="loader">
-    <div style="font-size: 3rem;">🛸</div>
-    <div class="loader-text">CONNECTING TO MOTHER SHIP...</div>
+    <div style="font-size: 3rem; animation: spin 2s infinite linear;">🛸</div>
+    <div class="loader-text">SYNCING MOTHER SHIP DATA...</div>
 </div>
 
 <div class="header-container">
-    <h1>曜日羽球｜<span>星際補給母艦</span> <span class="version-tag">v4.3</span></h1>
+    <h1>曜日羽球｜<span>星際補給母艦</span> <span class="version-tag">v5.0</span></h1>
     
     <div class="user-info" id="userInfo" onclick="logout()" style="display:none;">
         <span id="userName">艦長</span>
@@ -426,20 +415,39 @@
     let isDbLoaded = { sched: false, ball: false, rec: false };
     let venueLastStock = {}; 
 
+    // --- Starfield Animation Logic ---
+    function initStarfield() {
+        const layer = document.getElementById('starfield');
+        const count = 50; 
+        for(let i=0; i<count; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const s = Math.random() * 2 + 1; 
+            star.style.width = s + 'px';
+            star.style.height = s + 'px';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+            star.style.setProperty('--opacity', Math.random());
+            layer.appendChild(star);
+        }
+    }
+    initStarfield();
+
     // --- Auth Logic ---
     window.signIn = () => {
-        signInWithPopup(auth, provider).catch((error) => alert("登入失敗: " + error.message));
+        signInWithPopup(auth, provider).catch((error) => alert("存取被拒: " + error.message));
     };
     
     window.logout = () => {
-        if(confirm("確定要登出嗎？")) signOut(auth);
+        if(confirm("確定要登出星際母艦嗎？")) signOut(auth);
     };
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
             currentUser = user;
             document.getElementById('authOverlay').style.opacity = 0;
-            setTimeout(() => document.getElementById('authOverlay').style.display = 'none', 500);
+            setTimeout(() => document.getElementById('authOverlay').style.display = 'none', 800);
             
             document.getElementById('userInfo').style.display = 'flex';
             document.getElementById('userImg').src = user.photoURL;
@@ -452,7 +460,7 @@
                 document.body.classList.add('guest-mode');
                 document.getElementById('userName').innerText = "訪客 (唯讀)";
                 if(!sessionStorage.getItem('guestAlertShown')) {
-                    alert(`歡迎 ${user.displayName}！\n您目前的權限為「訪客」，僅能瀏覽戰情儀表板，無法修改資料。`);
+                    alert(`身分確認：${user.displayName}\n權限等級：訪客\n\n歡迎登艦，您目前僅能瀏覽戰情儀表板。`);
                     sessionStorage.setItem('guestAlertShown', 'true');
                 }
             }
